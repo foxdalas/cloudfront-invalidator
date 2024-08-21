@@ -62267,7 +62267,8 @@ async function getDistributionIdsByTag() {
     const data = await client.send(command);
 
     if (!data.ResourceTagMappingList.length) {
-        throw new Error("No ARN found with the provided tags");
+        console.warn("No ARN found with the provided tags");
+        process.exit(0); // Exit the script gracefully
     }
 
     // Extract distribution IDs from the ARNs
