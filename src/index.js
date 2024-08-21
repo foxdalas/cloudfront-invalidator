@@ -74,36 +74,51 @@ async function createInvalidation(distributionId, paths, waitForInvalidation) {
         },
     };
 
-    try {
-        const command = new CreateInvalidationCommand(params);
-        const response = await client.send(command);
-        const invalidationId = response.Invalidation.Id;
+    let attempts = 0;
+    let maxAttempts = 12; // 12 attempts with delay increasing up to 120 seconds
+    let delay = 10000; // Initial delay of 10 seconds
 
-        console.log(
-            `Posted CloudFront invalidation for paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
-        );
+    while (attempts < maxAttempts) {
+        try {
+            attempts++;
+            const command = new CreateInvalidationCommand(params);
+            const response = await client.send(command);
+            const invalidationId = response.Invalidation.Id;
 
-        if (waitForInvalidation) {
-            console.log(`Waiting for invalidation ${invalidationId} to complete...`);
-            const waiterParams = {
-                client,
-                maxWaitTime: 300, // Maximum wait time in seconds
-            };
-            await waitUntilInvalidationCompleted(
-                { ...waiterParams },
-                { DistributionId: distributionId, Id: invalidationId },
+            console.log(
+                `Posted CloudFront invalidation for paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
             );
-            console.log(`Invalidation ${invalidationId} completed.`);
-        } else {
-            console.log(`Invalidation ${invalidationId} initiated.`);
+
+            if (waitForInvalidation) {
+                console.log(`Waiting for invalidation ${invalidationId} to complete...`);
+                const waiterParams = {
+                    client,
+                    maxWaitTime: 300, // Maximum wait time in seconds
+                };
+                await waitUntilInvalidationCompleted(
+                    { ...waiterParams },
+                    { DistributionId: distributionId, Id: invalidationId },
+                );
+                console.log(`Invalidation ${invalidationId} completed.`);
+            } else {
+                console.log(`Invalidation ${invalidationId} initiated.`);
+            }
+            return; // Exit the loop if the request succeeds
+        } catch (error) {
+            if (error.Code === 'Throttling') {
+                console.warn(`Throttling detected. Attempt ${attempts} of ${maxAttempts}. Retrying in ${delay / 1000} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay = Math.min(delay + 10000, 120000); // Increase delay by 10 seconds, max 120 seconds
+            } else {
+                console.error(
+                    `Failed to invalidate paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
+                    error,
+                );
+                throw error;
+            }
         }
-    } catch (error) {
-        console.error(
-            `Failed to invalidate paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
-            error,
-        );
-        throw error;
     }
+    throw new Error(`Failed to create invalidation after ${attempts} attempts due to throttling.`);
 }
 
 run();
