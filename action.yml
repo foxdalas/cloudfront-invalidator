@@ -1,0 +1,15 @@
+name: 'Cloudfront Invalidator'
+description: 'Invalidate cloudfront cache'
+inputs:
+  tag_key:
+    description: 'Cloudfront Distribution tag name'
+    required: true
+  tag_value:
+    description: 'Cloudfront Distribution tag value'
+    required: true
+  paths:
+    description: 'Path to invalidate e.q. ["/path1", "path2"]'
+    required: true
+runs:
+  using: 'node12'
+  main: 'index.js'
