@@ -10,9 +10,9 @@ Use this action to invalidate specific paths in a CloudFront distribution. The a
 - uses: foxdalas/cloudfront-invalidator@v1
   with:
     # Cloudfont distribution tag key to identify the distribution
-    tag_key: ''
+    tag_key: ""
     # Cloudfront distribution tag value to identify the distribution
-    tag_value: ''
+    tag_value: ""
     # Paths to invalidate. Provide paths in a JSON array format, e.g., '["/path1", "/path2"]'. Paths must start with a '/'
     paths: '["/index.html", "/assets/*"]'
 ```

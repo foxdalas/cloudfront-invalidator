@@ -31,9 +31,7 @@ async function run() {
     console.log(`Invalidation paths: ${JSON.stringify(paths)}`);
 
     for (const distributionId of distributionIds) {
-      for (const path of paths) {
-        await createInvalidation(distributionId, path);
-      }
+      await createInvalidation(distributionId, paths);
     }
   } catch (error) {
     core.setFailed(error.message);
@@ -62,15 +60,15 @@ async function getDistributionIdsByTag() {
   });
 }
 
-async function createInvalidation(distributionId, path) {
+async function createInvalidation(distributionId, paths) {
   const client = new CloudFrontClient();
   const params = {
     DistributionId: distributionId,
     InvalidationBatch: {
       CallerReference: String(new Date().getTime()),
       Paths: {
-        Quantity: 1,
-        Items: [path],
+        Quantity: paths.length,
+        Items: paths,
       },
     },
   };
@@ -79,12 +77,12 @@ async function createInvalidation(distributionId, path) {
     const command = new CreateInvalidationCommand(params);
     const response = await client.send(command);
     console.log(
-      `Posted CloudFront invalidation for path: ${path} on distribution: ${distributionId}`,
+      `Posted CloudFront invalidation for paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
     );
     console.log("Response:", response);
   } catch (error) {
     console.error(
-      `Failed to invalidate path: ${path} on distribution: ${distributionId}`,
+      `Failed to invalidate paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
       error,
     );
     throw error;
