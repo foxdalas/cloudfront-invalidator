@@ -15,6 +15,8 @@ Use this action to invalidate specific paths in a CloudFront distribution. The a
     tag_value: ""
     # Paths to invalidate. Provide paths in a JSON array format, e.g., '["/path1", "/path2"]'. Paths must start with a '/'
     paths: '/index.html, /assets/*]'
+    # Wait for the invalidation to complete. Default is true
+    wait: true
 ```
 
 ### Example Workflow
@@ -40,4 +42,5 @@ jobs:
           tag_key: "Environment"
           tag_value: "Production"
           paths: "/index.html, /assets/*"
+          wait: true
 ```
