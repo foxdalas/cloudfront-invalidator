@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Invalidate CloudFront paths
-        uses: ./
+        uses: foxdalas/cloudfront-invalidator@v1
         with:
           tag_key: "Environment"
           tag_value: "Production"
