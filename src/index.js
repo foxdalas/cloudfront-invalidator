@@ -28,7 +28,7 @@ async function run() {
         // Ensure all paths are correctly formatted
         paths = paths.map((path) => (path.startsWith("/") ? path : `/${path}`));
 
-        console.log(`Invalidation paths: ${JSON.stringify(paths)}`);
+        core.info(`Invalidation paths: ${JSON.stringify(paths)}`);
 
         for (const distributionId of distributionIds) {
             await createInvalidation(distributionId, paths, waitForInvalidation);
@@ -50,7 +50,7 @@ async function getDistributionIdsByTag() {
     const data = await client.send(command);
 
     if (!data.ResourceTagMappingList.length) {
-        console.warn("No ARN found with the provided tags");
+        core.warning("No ARN found with the provided tags");
         process.exit(0); // Exit the script gracefully
     }
 
@@ -85,12 +85,12 @@ async function createInvalidation(distributionId, paths, waitForInvalidation) {
             const response = await client.send(command);
             const invalidationId = response.Invalidation.Id;
 
-            console.log(
+            core.info(
                 `Posted CloudFront invalidation for paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
             );
 
             if (waitForInvalidation) {
-                console.log(`Waiting for invalidation ${invalidationId} to complete...`);
+                core.info(`Waiting for invalidation ${invalidationId} to complete...`);
                 const waiterParams = {
                     client,
                     maxWaitTime: 300, // Maximum wait time in seconds
@@ -99,18 +99,18 @@ async function createInvalidation(distributionId, paths, waitForInvalidation) {
                     { ...waiterParams },
                     { DistributionId: distributionId, Id: invalidationId },
                 );
-                console.log(`Invalidation ${invalidationId} completed.`);
+                core.info(`Invalidation ${invalidationId} completed.`);
             } else {
-                console.log(`Invalidation ${invalidationId} initiated.`);
+                core.info(`Invalidation ${invalidationId} initiated.`);
             }
             return; // Exit the loop if the request succeeds
         } catch (error) {
             if (error.Code === 'Throttling') {
-                console.warn(`Throttling detected. Attempt ${attempts} of ${maxAttempts}. Retrying in ${delay / 1000} seconds...`);
+                core.warning(`Throttling detected. Attempt ${attempts} of ${maxAttempts}. Retrying in ${delay / 1000} seconds...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 delay = Math.min(delay + 10000, 120000); // Increase delay by 10 seconds, max 120 seconds
             } else {
-                console.error(
+                core.error(
                     `Failed to invalidate paths: ${JSON.stringify(paths)} on distribution: ${distributionId}`,
                     error,
                 );
