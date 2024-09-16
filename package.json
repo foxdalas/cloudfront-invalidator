@@ -20,7 +20,7 @@
     "@aws-sdk/client-resource-groups-tagging-api": "^3.635.0",
     "@vercel/ncc": "^0.38.1",
     "aws-sdk": "^2.1679.0",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.0.1",
     "prettier": "^3.3.3"
   }
 }
