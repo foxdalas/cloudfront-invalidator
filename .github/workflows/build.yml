@@ -18,17 +18,10 @@ on:
 permissions: 
   contents: write
 
-env:
-  # A pipe-separated array of files to ignore when comparing the expected and actual dist/ directories,
-  # which are used as a regular expression filter in the `grep` command.
-  FILES_TO_IGNORE: "index.js.map|sourcemap-register.js"
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy: 
-      fail-fast: false
-
+ 
     steps:
       - uses: actions/checkout@v4
 
