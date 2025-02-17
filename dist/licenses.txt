@@ -3133,6 +3133,9 @@ Apache-2.0
    limitations under the License.
 
 
+@aws-sdk/nested-clients
+Apache-2.0
+
 @aws-sdk/region-config-resolver
 Apache-2.0
 Apache License
