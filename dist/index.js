@@ -3283,9 +3283,9 @@ util_endpoints_2.customEndpointFunctions.aws = util_endpoints_1.awsEndpointFunct
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ruleSet = void 0;
-const A = "required", B = "fn", C = "argv", D = "ref";
-const a = true, b = "isSet", c = "booleanEquals", d = "error", e = "endpoint", f = "tree", g = "PartitionResult", h = "stringEquals", i = "sigv4", j = "cloudfront", k = { [A]: false, "type": "String" }, l = { [A]: true, "default": false, "type": "Boolean" }, m = { [D]: "Endpoint" }, n = { [B]: c, [C]: [{ [D]: "UseFIPS" }, true] }, o = { [B]: c, [C]: [{ [D]: "UseDualStack" }, true] }, p = {}, q = { [B]: h, [C]: [{ [B]: "getAttr", [C]: [{ [D]: g }, "name"] }, "aws"] }, r = { [B]: "getAttr", [C]: [{ [D]: g }, "name"] }, s = { [B]: c, [C]: [{ [D]: "UseFIPS" }, false] }, t = { [B]: c, [C]: [{ [D]: "UseDualStack" }, false] }, u = { "authSchemes": [{ "name": i, "signingName": j, "signingRegion": "us-east-1" }] }, v = { [B]: "getAttr", [C]: [{ [D]: g }, "supportsFIPS"] }, w = { [B]: c, [C]: [true, { [B]: "getAttr", [C]: [{ [D]: g }, "supportsDualStack"] }] }, x = [n], y = [o], z = [{ [D]: "Region" }];
-const _data = { version: "1.0", parameters: { Region: k, UseDualStack: l, UseFIPS: l, Endpoint: k }, rules: [{ conditions: [{ [B]: b, [C]: [m] }], rules: [{ conditions: x, error: "Invalid Configuration: FIPS and custom endpoint are not supported", type: d }, { conditions: y, error: "Invalid Configuration: Dualstack and custom endpoint are not supported", type: d }, { endpoint: { url: m, properties: p, headers: p }, type: e }], type: f }, { conditions: [{ [B]: b, [C]: z }], rules: [{ conditions: [{ [B]: "aws.partition", [C]: z, assign: g }], rules: [{ conditions: [q, s, t], endpoint: { url: "https://cloudfront.amazonaws.com", properties: u, headers: p }, type: e }, { conditions: [q, n, t], endpoint: { url: "https://cloudfront-fips.amazonaws.com", properties: u, headers: p }, type: e }, { conditions: [{ [B]: h, [C]: [r, "aws-cn"] }, s, t], endpoint: { url: "https://cloudfront.cn-northwest-1.amazonaws.com.cn", properties: { authSchemes: [{ name: i, signingName: j, signingRegion: "cn-northwest-1" }] }, headers: p }, type: e }, { conditions: [n, o], rules: [{ conditions: [{ [B]: c, [C]: [a, v] }, w], rules: [{ endpoint: { url: "https://cloudfront-fips.{Region}.{PartitionResult#dualStackDnsSuffix}", properties: p, headers: p }, type: e }], type: f }, { error: "FIPS and DualStack are enabled, but this partition does not support one or both", type: d }], type: f }, { conditions: x, rules: [{ conditions: [{ [B]: c, [C]: [v, a] }], rules: [{ endpoint: { url: "https://cloudfront-fips.{Region}.{PartitionResult#dnsSuffix}", properties: p, headers: p }, type: e }], type: f }, { error: "FIPS is enabled but this partition does not support FIPS", type: d }], type: f }, { conditions: y, rules: [{ conditions: [w], rules: [{ endpoint: { url: "https://cloudfront.{Region}.{PartitionResult#dualStackDnsSuffix}", properties: p, headers: p }, type: e }], type: f }, { error: "DualStack is enabled but this partition does not support DualStack", type: d }], type: f }, { endpoint: { url: "https://cloudfront.{Region}.{PartitionResult#dnsSuffix}", properties: p, headers: p }, type: e }], type: f }], type: f }, { error: "Invalid Configuration: Missing Region", type: d }] };
+const x = "required", y = "fn", z = "argv", A = "ref", B = "authSchemes", C = "name", D = "signingRegion";
+const a = true, b = "isSet", c = "booleanEquals", d = "error", e = "endpoint", f = "tree", g = "PartitionResult", h = { [x]: true, "default": false, "type": "Boolean" }, i = { [x]: false, "type": "String" }, j = { [A]: "Endpoint" }, k = { [y]: c, [z]: [{ [A]: "UseFIPS" }, true] }, l = { [y]: c, [z]: [{ [A]: "UseDualStack" }, true] }, m = {}, n = { [y]: "stringEquals", [z]: [{ [y]: "getAttr", [z]: [{ [A]: g }, "name"] }, "aws"] }, o = { [y]: c, [z]: [{ [A]: "UseFIPS" }, false] }, p = { [B]: [{ [C]: "sigv4", [D]: "us-east-1" }] }, q = { [y]: "stringEquals", [z]: [{ [y]: "getAttr", [z]: [{ [A]: g }, "name"] }, "aws-cn"] }, r = { [y]: c, [z]: [{ [A]: "UseDualStack" }, false] }, s = { [B]: [{ [C]: "sigv4", [D]: "cn-northwest-1" }] }, t = { [y]: "getAttr", [z]: [{ [A]: g }, "supportsFIPS"] }, u = { [y]: c, [z]: [true, { [y]: "getAttr", [z]: [{ [A]: g }, "supportsDualStack"] }] }, v = { [B]: [{ [C]: "sigv4", [D]: "{PartitionResult#implicitGlobalRegion}" }] }, w = [{ [A]: "Region" }];
+const _data = { version: "1.0", parameters: { UseDualStack: h, UseFIPS: h, Endpoint: i, Region: i }, rules: [{ conditions: [{ [y]: b, [z]: [j] }], rules: [{ conditions: [k], error: "Invalid Configuration: FIPS and custom endpoint are not supported", type: d }, { rules: [{ conditions: [l], error: "Invalid Configuration: Dualstack and custom endpoint are not supported", type: d }, { endpoint: { url: j, properties: m, headers: m }, type: e }], type: f }], type: f }, { rules: [{ conditions: [{ [y]: b, [z]: w }], rules: [{ conditions: [{ [y]: "aws.partition", [z]: w, assign: g }], rules: [{ conditions: [n, o, l], endpoint: { url: "https://cloudfront.global.api.aws", properties: p, headers: m }, type: e }, { conditions: [n, k, l], endpoint: { url: "https://cloudfront-fips.global.api.aws", properties: p, headers: m }, type: e }, { conditions: [q, o, r], endpoint: { url: "https://cloudfront.cn-northwest-1.amazonaws.com.cn", properties: s, headers: m }, type: e }, { conditions: [q, k, r], endpoint: { url: "https://cloudfront-fips.cn-northwest-1.amazonaws.com.cn", properties: s, headers: m }, type: e }, { conditions: [k, l], rules: [{ conditions: [{ [y]: c, [z]: [a, t] }, u], rules: [{ endpoint: { url: "https://cloudfront-fips.{PartitionResult#dualStackDnsSuffix}", properties: v, headers: m }, type: e }], type: f }, { error: "FIPS and DualStack are enabled, but this partition does not support one or both", type: d }], type: f }, { conditions: [k, r], rules: [{ conditions: [{ [y]: c, [z]: [t, a] }], rules: [{ endpoint: { url: "https://cloudfront-fips.{PartitionResult#dnsSuffix}", properties: v, headers: m }, type: e }], type: f }, { error: "FIPS is enabled but this partition does not support FIPS", type: d }], type: f }, { conditions: [o, l], rules: [{ conditions: [u], rules: [{ endpoint: { url: "https://cloudfront.{PartitionResult#dualStackDnsSuffix}", properties: v, headers: m }, type: e }], type: f }, { error: "DualStack is enabled but this partition does not support DualStack", type: d }], type: f }, { endpoint: { url: "https://cloudfront.{PartitionResult#dnsSuffix}", properties: v, headers: m }, type: e }], type: f }], type: f }, { error: "Invalid Configuration: Missing Region", type: d }], type: f }] };
 exports.ruleSet = _data;
 
 
@@ -3582,6 +3582,8 @@ __export(index_exports, {
   OriginRequestPolicyQueryStringBehavior: () => OriginRequestPolicyQueryStringBehavior,
   OriginRequestPolicyType: () => OriginRequestPolicyType,
   OriginsFilterSensitiveLog: () => OriginsFilterSensitiveLog,
+  ParameterDefinitionFilterSensitiveLog: () => ParameterDefinitionFilterSensitiveLog,
+  ParameterDefinitionSchemaFilterSensitiveLog: () => ParameterDefinitionSchemaFilterSensitiveLog,
   PreconditionFailed: () => PreconditionFailed,
   PriceClass: () => PriceClass,
   PublicKeyAlreadyExists: () => PublicKeyAlreadyExists,
@@ -3604,7 +3606,9 @@ __export(index_exports, {
   StagingDistributionInUse: () => StagingDistributionInUse,
   StreamingDistributionAlreadyExists: () => StreamingDistributionAlreadyExists,
   StreamingDistributionNotDisabled: () => StreamingDistributionNotDisabled,
+  StringSchemaConfigFilterSensitiveLog: () => StringSchemaConfigFilterSensitiveLog,
   TagResourceCommand: () => TagResourceCommand,
+  TenantConfigFilterSensitiveLog: () => TenantConfigFilterSensitiveLog,
   TestFunctionCommand: () => TestFunctionCommand,
   TestFunctionFailed: () => TestFunctionFailed,
   TestFunctionRequestFilterSensitiveLog: () => TestFunctionRequestFilterSensitiveLog,
@@ -3704,6 +3708,7 @@ __export(index_exports, {
   paginateListInvalidations: () => paginateListInvalidations,
   paginateListInvalidationsForDistributionTenant: () => paginateListInvalidationsForDistributionTenant,
   paginateListKeyValueStores: () => paginateListKeyValueStores,
+  paginateListOriginAccessControls: () => paginateListOriginAccessControls,
   paginateListPublicKeys: () => paginateListPublicKeys,
   paginateListStreamingDistributions: () => paginateListStreamingDistributions,
   waitForDistributionDeployed: () => waitForDistributionDeployed,
@@ -3868,7 +3873,7 @@ var import_middleware_serde = __nccwpck_require__(3255);
 
 // src/protocols/Aws_restXml.ts
 var import_core2 = __nccwpck_require__(973);
-var import_xml_builder = __nccwpck_require__(4274);
+var import_xml_builder = __nccwpck_require__(2561);
 
 
 
@@ -4301,7 +4306,8 @@ var MinimumProtocolVersion = {
   TLSv1_2016: "TLSv1_2016",
   TLSv1_2_2018: "TLSv1.2_2018",
   TLSv1_2_2019: "TLSv1.2_2019",
-  TLSv1_2_2021: "TLSv1.2_2021"
+  TLSv1_2_2021: "TLSv1.2_2021",
+  TLSv1_3_2025: "TLSv1.3_2025"
 };
 var SSLSupportMethod = {
   sni_only: "sni-only",
@@ -6311,9 +6317,28 @@ var OriginFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
 var OriginsFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
   ...obj
 }), "OriginsFilterSensitiveLog");
-var DistributionConfigFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+var StringSchemaConfigFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
   ...obj,
   ...obj.Comment && { Comment: import_smithy_client.SENSITIVE_STRING }
+}), "StringSchemaConfigFilterSensitiveLog");
+var ParameterDefinitionSchemaFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+  ...obj,
+  ...obj.StringSchema && { StringSchema: StringSchemaConfigFilterSensitiveLog(obj.StringSchema) }
+}), "ParameterDefinitionSchemaFilterSensitiveLog");
+var ParameterDefinitionFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+  ...obj,
+  ...obj.Definition && { Definition: ParameterDefinitionSchemaFilterSensitiveLog(obj.Definition) }
+}), "ParameterDefinitionFilterSensitiveLog");
+var TenantConfigFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+  ...obj,
+  ...obj.ParameterDefinitions && {
+    ParameterDefinitions: obj.ParameterDefinitions.map((item) => ParameterDefinitionFilterSensitiveLog(item))
+  }
+}), "TenantConfigFilterSensitiveLog");
+var DistributionConfigFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+  ...obj,
+  ...obj.Comment && { Comment: import_smithy_client.SENSITIVE_STRING },
+  ...obj.TenantConfig && { TenantConfig: TenantConfigFilterSensitiveLog(obj.TenantConfig) }
 }), "DistributionConfigFilterSensitiveLog");
 var DistributionFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
   ...obj,
@@ -7199,25 +7224,32 @@ var GetFunctionResultFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
   ...obj.FunctionCode && { FunctionCode: import_smithy_client.SENSITIVE_STRING }
 }), "GetFunctionResultFilterSensitiveLog");
 var DistributionSummaryFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.Comment && { Comment: import_smithy_client.SENSITIVE_STRING }
 }), "DistributionSummaryFilterSensitiveLog");
 var DistributionListFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.Items && { Items: obj.Items.map((item) => DistributionSummaryFilterSensitiveLog(item)) }
 }), "DistributionListFilterSensitiveLog");
 var ListDistributionsResultFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.DistributionList && { DistributionList: DistributionListFilterSensitiveLog(obj.DistributionList) }
 }), "ListDistributionsResultFilterSensitiveLog");
 var ListDistributionsByAnycastIpListIdResultFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.DistributionList && { DistributionList: DistributionListFilterSensitiveLog(obj.DistributionList) }
 }), "ListDistributionsByAnycastIpListIdResultFilterSensitiveLog");
 var ListDistributionsByConnectionModeResultFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.DistributionList && { DistributionList: DistributionListFilterSensitiveLog(obj.DistributionList) }
 }), "ListDistributionsByConnectionModeResultFilterSensitiveLog");
 var ListDistributionsByRealtimeLogConfigResultFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.DistributionList && { DistributionList: DistributionListFilterSensitiveLog(obj.DistributionList) }
 }), "ListDistributionsByRealtimeLogConfigResultFilterSensitiveLog");
 var ListDistributionsByWebACLIdResultFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-  ...obj
+  ...obj,
+  ...obj.DistributionList && { DistributionList: DistributionListFilterSensitiveLog(obj.DistributionList) }
 }), "ListDistributionsByWebACLIdResultFilterSensitiveLog");
 
 // src/models/models_2.ts
@@ -14362,6 +14394,9 @@ var se_Origin = /* @__PURE__ */ __name((input, context) => {
   if (input[_CTon] != null) {
     bn.c(import_xml_builder.XmlNode.of(_i, String(input[_CTon])).n(_CTon));
   }
+  if (input[_RCT] != null) {
+    bn.c(import_xml_builder.XmlNode.of(_i, String(input[_RCT])).n(_RCT));
+  }
   if (input[_OS] != null) {
     bn.c(se_OriginShield(input[_OS], context).n(_OS));
   }
@@ -14956,6 +14991,9 @@ var se_S3OriginConfig = /* @__PURE__ */ __name((input, context) => {
   if (input[_OAI] != null) {
     bn.c(import_xml_builder.XmlNode.of(_s, input[_OAI]).n(_OAI));
   }
+  if (input[_ORT] != null) {
+    bn.c(import_xml_builder.XmlNode.of(_i, String(input[_ORT])).n(_ORT));
+  }
   return bn;
 }, "se_S3OriginConfig");
 var se_SessionStickinessConfig = /* @__PURE__ */ __name((input, context) => {
@@ -15054,7 +15092,7 @@ var se_StreamingLoggingConfig = /* @__PURE__ */ __name((input, context) => {
 var se_StringSchemaConfig = /* @__PURE__ */ __name((input, context) => {
   const bn = new import_xml_builder.XmlNode(_SSCt);
   if (input[_Co] != null) {
-    bn.c(import_xml_builder.XmlNode.of(_s, input[_Co]).n(_Co));
+    bn.c(import_xml_builder.XmlNode.of(_sST, input[_Co]).n(_Co));
   }
   if (input[_DV] != null) {
     bn.c(import_xml_builder.XmlNode.of(_PV, input[_DV]).n(_DV));
@@ -15148,7 +15186,7 @@ var se_ViewerCertificate = /* @__PURE__ */ __name((input, context) => {
     bn.c(import_xml_builder.XmlNode.of(_b, String(input[_CFDC])).n(_CFDC));
   }
   if (input[_IAMCI] != null) {
-    bn.c(import_xml_builder.XmlNode.of(_s, input[_IAMCI]).n(_IAMCI));
+    bn.c(import_xml_builder.XmlNode.of(_SCI, input[_IAMCI]).n(_IAMCI));
   }
   if (input[_ACMCA] != null) {
     bn.c(import_xml_builder.XmlNode.of(_s, input[_ACMCA]).n(_ACMCA));
@@ -17167,6 +17205,9 @@ var de_Origin = /* @__PURE__ */ __name((output, context) => {
   if (output[_CTon] != null) {
     contents[_CTon] = (0, import_smithy_client.strictParseInt32)(output[_CTon]);
   }
+  if (output[_RCT] != null) {
+    contents[_RCT] = (0, import_smithy_client.strictParseInt32)(output[_RCT]);
+  }
   if (output[_OS] != null) {
     contents[_OS] = de_OriginShield(output[_OS], context);
   }
@@ -18065,6 +18106,9 @@ var de_S3OriginConfig = /* @__PURE__ */ __name((output, context) => {
   if (output[_OAI] != null) {
     contents[_OAI] = (0, import_smithy_client.expectString)(output[_OAI]);
   }
+  if (output[_ORT] != null) {
+    contents[_ORT] = (0, import_smithy_client.strictParseInt32)(output[_ORT]);
+  }
   return contents;
 }, "de_S3OriginConfig");
 var de_SessionStickinessConfig = /* @__PURE__ */ __name((output, context) => {
@@ -18870,6 +18914,7 @@ var _QSu = "QueryString";
 var _R = "Resource";
 var _RARN = "RoleARN";
 var _RC = "ResponseCode";
+var _RCT = "ResponseCompletionTimeout";
 var _RE = "RoutingEndpoint";
 var _RF = "RedirectFrom";
 var _RHC = "RemoveHeadersConfig";
@@ -18917,6 +18962,7 @@ var _SARN = "SourceARN";
 var _SARNt = "StreamARN";
 var _SB = "SigningBehavior";
 var _SC = "SelectionCriteria";
+var _SCI = "ServerCertificateId";
 var _SCUI = "S3CanonicalUserId";
 var _SCt = "StatusCodes";
 var _SCta = "StatusCode";
@@ -21404,6 +21450,10 @@ var paginateListInvalidations = (0, import_core.createPaginator)(CloudFrontClien
 
 var paginateListKeyValueStores = (0, import_core.createPaginator)(CloudFrontClient, ListKeyValueStoresCommand, "Marker", "KeyValueStoreList.NextMarker", "MaxItems");
 
+// src/pagination/ListOriginAccessControlsPaginator.ts
+
+var paginateListOriginAccessControls = (0, import_core.createPaginator)(CloudFrontClient, ListOriginAccessControlsCommand, "Marker", "OriginAccessControlList.NextMarker", "MaxItems");
+
 // src/pagination/ListPublicKeysPaginator.ts
 
 var paginateListPublicKeys = (0, import_core.createPaginator)(CloudFrontClient, ListPublicKeysCommand, "Marker", "PublicKeyList.NextMarker", "MaxItems");
@@ -23291,7 +23341,6 @@ var JsonShapeDeserializer = class extends SerdeContextConfig {
 // src/submodules/protocols/json/JsonShapeSerializer.ts
 var import_schema2 = __nccwpck_require__(6890);
 var import_serde4 = __nccwpck_require__(2430);
-var import_serde5 = __nccwpck_require__(2430);
 
 // src/submodules/protocols/json/jsonReplacer.ts
 var import_serde3 = __nccwpck_require__(2430);
@@ -23320,7 +23369,7 @@ var JsonReplacer = class {
     this.stage = 1;
     return (key, value) => {
       if (value instanceof import_serde3.NumericValue) {
-        const v = `${NUMERIC_CONTROL_CHAR + +"nv" + this.counter++}_` + value.string;
+        const v = `${NUMERIC_CONTROL_CHAR + "nv" + this.counter++}_` + value.string;
         this.values.set(`"${v}"`, value.string);
         return v;
       }
@@ -23442,11 +23491,16 @@ var JsonShapeSerializer = class extends SerdeContextConfig {
         return String(value);
       }
     }
-    const mediaType = ns.getMergedTraits().mediaType;
-    if (ns.isStringSchema() && typeof value === "string" && mediaType) {
-      const isJson = mediaType === "application/json" || mediaType.endsWith("+json");
-      if (isJson) {
-        return import_serde5.LazyJsonString.from(value);
+    if (ns.isStringSchema()) {
+      if (typeof value === "undefined" && ns.isIdempotencyToken()) {
+        return (0, import_serde4.generateIdempotencyToken)();
+      }
+      const mediaType = ns.getMergedTraits().mediaType;
+      if (typeof value === "string" && mediaType) {
+        const isJson = mediaType === "application/json" || mediaType.endsWith("+json");
+        if (isJson) {
+          return import_serde4.LazyJsonString.from(value);
+        }
       }
     }
     return value;
@@ -23481,11 +23535,13 @@ var AwsJsonRpcProtocol = class extends import_protocols.RpcProtocol {
   }
   serializer;
   deserializer;
+  serviceTarget;
   codec;
-  constructor({ defaultNamespace }) {
+  constructor({ defaultNamespace, serviceTarget }) {
     super({
       defaultNamespace
     });
+    this.serviceTarget = serviceTarget;
     this.codec = new JsonCodec({
       timestampFormat: {
         useTrait: true,
@@ -23503,7 +23559,7 @@ var AwsJsonRpcProtocol = class extends import_protocols.RpcProtocol {
     }
     Object.assign(request.headers, {
       "content-type": `application/x-amz-json-${this.getJsonRpcVersion()}`,
-      "x-amz-target": (this.getJsonRpcVersion() === "1.0" ? `JsonRpc10.` : `JsonProtocol.`) + import_schema3.NormalizedSchema.of(operationSchema).getName()
+      "x-amz-target": `${this.serviceTarget}.${import_schema3.NormalizedSchema.of(operationSchema).getName()}`
     });
     if ((0, import_schema3.deref)(operationSchema.input) === "unit" || !request.body) {
       request.body = "{}";
@@ -23561,9 +23617,10 @@ var AwsJson1_0Protocol = class extends AwsJsonRpcProtocol {
   static {
     __name(this, "AwsJson1_0Protocol");
   }
-  constructor({ defaultNamespace }) {
+  constructor({ defaultNamespace, serviceTarget }) {
     super({
-      defaultNamespace
+      defaultNamespace,
+      serviceTarget
     });
   }
   getShapeId() {
@@ -23572,6 +23629,12 @@ var AwsJson1_0Protocol = class extends AwsJsonRpcProtocol {
   getJsonRpcVersion() {
     return "1.0";
   }
+  /**
+   * @override
+   */
+  getDefaultContentType() {
+    return "application/x-amz-json-1.0";
+  }
 };
 
 // src/submodules/protocols/json/AwsJson1_1Protocol.ts
@@ -23579,9 +23642,10 @@ var AwsJson1_1Protocol = class extends AwsJsonRpcProtocol {
   static {
     __name(this, "AwsJson1_1Protocol");
   }
-  constructor({ defaultNamespace }) {
+  constructor({ defaultNamespace, serviceTarget }) {
     super({
-      defaultNamespace
+      defaultNamespace,
+      serviceTarget
     });
   }
   getShapeId() {
@@ -23589,6 +23653,12 @@ var AwsJson1_1Protocol = class extends AwsJsonRpcProtocol {
   }
   getJsonRpcVersion() {
     return "1.1";
+  }
+  /**
+   * @override
+   */
+  getDefaultContentType() {
+    return "application/x-amz-json-1.1";
   }
 };
 
@@ -23646,7 +23716,7 @@ var AwsRestJsonProtocol = class extends import_protocols2.HttpBindingProtocol {
         } else if (httpPayloadMember.isBlobSchema()) {
           request.headers["content-type"] = "application/octet-stream";
         } else {
-          request.headers["content-type"] = "application/json";
+          request.headers["content-type"] = this.getDefaultContentType();
         }
       } else if (!inputSchema.isUnitSchema()) {
         const hasBody = Object.values(members).find((m) => {
@@ -23654,7 +23724,7 @@ var AwsRestJsonProtocol = class extends import_protocols2.HttpBindingProtocol {
           return !httpQuery && !httpQueryParams && !httpHeader && !httpLabel && httpPrefixHeaders === void 0;
         });
         if (hasBody) {
-          request.headers["content-type"] = "application/json";
+          request.headers["content-type"] = this.getDefaultContentType();
         }
       }
     }
@@ -23705,6 +23775,12 @@ var AwsRestJsonProtocol = class extends import_protocols2.HttpBindingProtocol {
       ...output
     });
     throw exception;
+  }
+  /**
+   * @override
+   */
+  getDefaultContentType() {
+    return "application/json";
   }
 };
 
@@ -23774,9 +23850,8 @@ var XmlShapeDeserializer = class extends SerdeContextConfig {
   readSchema(_schema, value) {
     const ns = import_schema5.NormalizedSchema.of(_schema);
     const traits = ns.getMergedTraits();
-    const schema = ns.getSchema();
     if (ns.isListSchema() && !Array.isArray(value)) {
-      return this.readSchema(schema, [value]);
+      return this.readSchema(ns, [value]);
     }
     if (value == null) {
       return value;
@@ -23832,14 +23907,14 @@ var XmlShapeDeserializer = class extends SerdeContextConfig {
         return value;
       }
       throw new Error(`@aws-sdk/core/protocols - xml deserializer unhandled schema type for ${ns.getName(true)}`);
-    } else {
-      if (ns.isListSchema()) {
-        return [];
-      } else if (ns.isMapSchema() || ns.isStructSchema()) {
-        return {};
-      }
-      return this.stringDeserializer.read(ns, value);
     }
+    if (ns.isListSchema()) {
+      return [];
+    }
+    if (ns.isMapSchema() || ns.isStructSchema()) {
+      return {};
+    }
+    return this.stringDeserializer.read(ns, value);
   }
   parseXml(xml) {
     if (xml.length) {
@@ -23881,7 +23956,7 @@ var XmlShapeDeserializer = class extends SerdeContextConfig {
 // src/submodules/protocols/query/QueryShapeSerializer.ts
 var import_protocols4 = __nccwpck_require__(3422);
 var import_schema6 = __nccwpck_require__(6890);
-var import_serde6 = __nccwpck_require__(2430);
+var import_serde5 = __nccwpck_require__(2430);
 var import_smithy_client4 = __nccwpck_require__(1411);
 var import_util_base642 = __nccwpck_require__(8385);
 var QueryShapeSerializer = class extends SerdeContextConfig {
@@ -23910,6 +23985,9 @@ var QueryShapeSerializer = class extends SerdeContextConfig {
       if (value != null) {
         this.writeKey(prefix);
         this.writeValue(String(value));
+      } else if (ns.isIdempotencyToken()) {
+        this.writeKey(prefix);
+        this.writeValue((0, import_serde5.generateIdempotencyToken)());
       }
     } else if (ns.isBigIntegerSchema()) {
       if (value != null) {
@@ -23919,7 +23997,7 @@ var QueryShapeSerializer = class extends SerdeContextConfig {
     } else if (ns.isBigDecimalSchema()) {
       if (value != null) {
         this.writeKey(prefix);
-        this.writeValue(value instanceof import_serde6.NumericValue ? value.string : String(value));
+        this.writeValue(value instanceof import_serde5.NumericValue ? value.string : String(value));
       }
     } else if (ns.isTimestampSchema()) {
       if (value instanceof Date) {
@@ -23983,7 +24061,7 @@ var QueryShapeSerializer = class extends SerdeContextConfig {
     } else if (ns.isStructSchema()) {
       if (value && typeof value === "object") {
         for (const [memberName, member] of ns.structIterator()) {
-          if (value[memberName] == null) {
+          if (value[memberName] == null && !member.isIdempotencyToken()) {
             continue;
           }
           const suffix = this.getKey(memberName, member.getMergedTraits().xmlName);
@@ -24174,6 +24252,12 @@ var AwsQueryProtocol = class extends import_protocols5.RpcProtocol {
     const errorData = this.loadQueryError(data);
     return errorData?.message ?? errorData?.Message ?? data.message ?? data.Message ?? "Unknown";
   }
+  /**
+   * @override
+   */
+  getDefaultContentType() {
+    return "application/x-www-form-urlencoded";
+  }
 };
 
 // src/submodules/protocols/query/AwsEc2QueryProtocol.ts
@@ -24262,9 +24346,9 @@ var loadRestXmlErrorCode = /* @__PURE__ */ __name((output, data) => {
 }, "loadRestXmlErrorCode");
 
 // src/submodules/protocols/xml/XmlShapeSerializer.ts
-var import_xml_builder = __nccwpck_require__(4274);
+var import_xml_builder = __nccwpck_require__(2561);
 var import_schema8 = __nccwpck_require__(6890);
-var import_serde7 = __nccwpck_require__(2430);
+var import_serde6 = __nccwpck_require__(2430);
 var import_smithy_client6 = __nccwpck_require__(1411);
 var import_util_base643 = __nccwpck_require__(8385);
 var XmlShapeSerializer = class extends SerdeContextConfig {
@@ -24329,7 +24413,7 @@ var XmlShapeSerializer = class extends SerdeContextConfig {
     }
     for (const [memberName, memberSchema] of ns.structIterator()) {
       const val = value[memberName];
-      if (val != null) {
+      if (val != null || memberSchema.isIdempotencyToken()) {
         if (memberSchema.getMergedTraits().xmlAttribute) {
           structXmlNode.addAttribute(
             memberSchema.getMergedTraits().xmlName ?? memberName,
@@ -24490,7 +24574,7 @@ var XmlShapeSerializer = class extends SerdeContextConfig {
             break;
         }
       } else if (ns.isBigDecimalSchema() && value) {
-        if (value instanceof import_serde7.NumericValue) {
+        if (value instanceof import_serde6.NumericValue) {
           return value.string;
         }
         return String(value);
@@ -24506,8 +24590,15 @@ var XmlShapeSerializer = class extends SerdeContextConfig {
         );
       }
     }
-    if (ns.isStringSchema() || ns.isBooleanSchema() || ns.isNumericSchema() || ns.isBigIntegerSchema() || ns.isBigDecimalSchema()) {
+    if (ns.isBooleanSchema() || ns.isNumericSchema() || ns.isBigIntegerSchema() || ns.isBigDecimalSchema()) {
       nodeContents = String(value);
+    }
+    if (ns.isStringSchema()) {
+      if (value === void 0 && ns.isIdempotencyToken()) {
+        nodeContents = (0, import_serde6.generateIdempotencyToken)();
+      } else {
+        nodeContents = String(value);
+      }
     }
     if (nodeContents === null) {
       throw new Error(`Unhandled schema-value pair ${ns.getName(true)}=${value}`);
@@ -24604,7 +24695,7 @@ var AwsRestXmlProtocol = class extends import_protocols6.HttpBindingProtocol {
         } else if (httpPayloadMember.isBlobSchema()) {
           request.headers["content-type"] = "application/octet-stream";
         } else {
-          request.headers["content-type"] = "application/xml";
+          request.headers["content-type"] = this.getDefaultContentType();
         }
       } else if (!ns.isUnitSchema()) {
         const hasBody = Object.values(members).find((m) => {
@@ -24612,11 +24703,11 @@ var AwsRestXmlProtocol = class extends import_protocols6.HttpBindingProtocol {
           return !httpQuery && !httpQueryParams && !httpHeader && !httpLabel && httpPrefixHeaders === void 0;
         });
         if (hasBody) {
-          request.headers["content-type"] = "application/xml";
+          request.headers["content-type"] = this.getDefaultContentType();
         }
       }
     }
-    if (request.headers["content-type"] === "application/xml") {
+    if (request.headers["content-type"] === this.getDefaultContentType()) {
       if (typeof request.body === "string") {
         request.body = '<?xml version="1.0" encoding="UTF-8"?>' + request.body;
       }
@@ -24669,6 +24760,12 @@ var AwsRestXmlProtocol = class extends import_protocols6.HttpBindingProtocol {
       ...output
     });
     throw exception;
+  }
+  /**
+   * @override
+   */
+  getDefaultContentType() {
+    return "application/xml";
   }
 };
 // Annotate the CommonJS export names for ESM import in node:
@@ -29309,7 +29406,7 @@ var partitions_default = {
         description: "Asia Pacific (Thailand)"
       },
       "aws-global": {
-        description: "AWS Standard global region"
+        description: "aws global region"
       },
       "ca-central-1": {
         description: "Canada (Central)"
@@ -29382,13 +29479,111 @@ var partitions_default = {
     regionRegex: "^cn\\-\\w+\\-\\d+$",
     regions: {
       "aws-cn-global": {
-        description: "AWS China global region"
+        description: "aws-cn global region"
       },
       "cn-north-1": {
         description: "China (Beijing)"
       },
       "cn-northwest-1": {
         description: "China (Ningxia)"
+      }
+    }
+  }, {
+    id: "aws-eusc",
+    outputs: {
+      dnsSuffix: "amazonaws.eu",
+      dualStackDnsSuffix: "api.amazonwebservices.eu",
+      implicitGlobalRegion: "eusc-de-east-1",
+      name: "aws-eusc",
+      supportsDualStack: false,
+      supportsFIPS: true
+    },
+    regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
+    regions: {
+      "eusc-de-east-1": {
+        description: "EU (Germany)"
+      }
+    }
+  }, {
+    id: "aws-iso",
+    outputs: {
+      dnsSuffix: "c2s.ic.gov",
+      dualStackDnsSuffix: "api.aws.ic.gov",
+      implicitGlobalRegion: "us-iso-east-1",
+      name: "aws-iso",
+      supportsDualStack: false,
+      supportsFIPS: true
+    },
+    regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
+    regions: {
+      "aws-iso-global": {
+        description: "aws-iso global region"
+      },
+      "us-iso-east-1": {
+        description: "US ISO East"
+      },
+      "us-iso-west-1": {
+        description: "US ISO WEST"
+      }
+    }
+  }, {
+    id: "aws-iso-b",
+    outputs: {
+      dnsSuffix: "sc2s.sgov.gov",
+      dualStackDnsSuffix: "api.aws.scloud",
+      implicitGlobalRegion: "us-isob-east-1",
+      name: "aws-iso-b",
+      supportsDualStack: false,
+      supportsFIPS: true
+    },
+    regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
+    regions: {
+      "aws-iso-b-global": {
+        description: "aws-iso-b global region"
+      },
+      "us-isob-east-1": {
+        description: "US ISOB East (Ohio)"
+      }
+    }
+  }, {
+    id: "aws-iso-e",
+    outputs: {
+      dnsSuffix: "cloud.adc-e.uk",
+      dualStackDnsSuffix: "api.cloud-aws.adc-e.uk",
+      implicitGlobalRegion: "eu-isoe-west-1",
+      name: "aws-iso-e",
+      supportsDualStack: false,
+      supportsFIPS: true
+    },
+    regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
+    regions: {
+      "aws-iso-e-global": {
+        description: "aws-iso-e global region"
+      },
+      "eu-isoe-west-1": {
+        description: "EU ISOE West"
+      }
+    }
+  }, {
+    id: "aws-iso-f",
+    outputs: {
+      dnsSuffix: "csp.hci.ic.gov",
+      dualStackDnsSuffix: "api.aws.hci.ic.gov",
+      implicitGlobalRegion: "us-isof-south-1",
+      name: "aws-iso-f",
+      supportsDualStack: false,
+      supportsFIPS: true
+    },
+    regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
+    regions: {
+      "aws-iso-f-global": {
+        description: "aws-iso-f global region"
+      },
+      "us-isof-east-1": {
+        description: "US ISOF EAST"
+      },
+      "us-isof-south-1": {
+        description: "US ISOF SOUTH"
       }
     }
   }, {
@@ -29404,111 +29599,13 @@ var partitions_default = {
     regionRegex: "^us\\-gov\\-\\w+\\-\\d+$",
     regions: {
       "aws-us-gov-global": {
-        description: "AWS GovCloud (US) global region"
+        description: "aws-us-gov global region"
       },
       "us-gov-east-1": {
         description: "AWS GovCloud (US-East)"
       },
       "us-gov-west-1": {
         description: "AWS GovCloud (US-West)"
-      }
-    }
-  }, {
-    id: "aws-iso",
-    outputs: {
-      dnsSuffix: "c2s.ic.gov",
-      dualStackDnsSuffix: "c2s.ic.gov",
-      implicitGlobalRegion: "us-iso-east-1",
-      name: "aws-iso",
-      supportsDualStack: false,
-      supportsFIPS: true
-    },
-    regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
-    regions: {
-      "aws-iso-global": {
-        description: "AWS ISO (US) global region"
-      },
-      "us-iso-east-1": {
-        description: "US ISO East"
-      },
-      "us-iso-west-1": {
-        description: "US ISO WEST"
-      }
-    }
-  }, {
-    id: "aws-iso-b",
-    outputs: {
-      dnsSuffix: "sc2s.sgov.gov",
-      dualStackDnsSuffix: "sc2s.sgov.gov",
-      implicitGlobalRegion: "us-isob-east-1",
-      name: "aws-iso-b",
-      supportsDualStack: false,
-      supportsFIPS: true
-    },
-    regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
-    regions: {
-      "aws-iso-b-global": {
-        description: "AWS ISOB (US) global region"
-      },
-      "us-isob-east-1": {
-        description: "US ISOB East (Ohio)"
-      }
-    }
-  }, {
-    id: "aws-iso-e",
-    outputs: {
-      dnsSuffix: "cloud.adc-e.uk",
-      dualStackDnsSuffix: "cloud.adc-e.uk",
-      implicitGlobalRegion: "eu-isoe-west-1",
-      name: "aws-iso-e",
-      supportsDualStack: false,
-      supportsFIPS: true
-    },
-    regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
-    regions: {
-      "aws-iso-e-global": {
-        description: "AWS ISOE (Europe) global region"
-      },
-      "eu-isoe-west-1": {
-        description: "EU ISOE West"
-      }
-    }
-  }, {
-    id: "aws-iso-f",
-    outputs: {
-      dnsSuffix: "csp.hci.ic.gov",
-      dualStackDnsSuffix: "csp.hci.ic.gov",
-      implicitGlobalRegion: "us-isof-south-1",
-      name: "aws-iso-f",
-      supportsDualStack: false,
-      supportsFIPS: true
-    },
-    regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
-    regions: {
-      "aws-iso-f-global": {
-        description: "AWS ISOF global region"
-      },
-      "us-isof-east-1": {
-        description: "US ISOF EAST"
-      },
-      "us-isof-south-1": {
-        description: "US ISOF SOUTH"
-      }
-    }
-  }, {
-    id: "aws-eusc",
-    outputs: {
-      dnsSuffix: "amazonaws.eu",
-      dualStackDnsSuffix: "amazonaws.eu",
-      implicitGlobalRegion: "eusc-de-east-1",
-      name: "aws-eusc",
-      supportsDualStack: false,
-      supportsFIPS: true
-    },
-    regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
-    regions: {
-      "eusc-de-east-1": {
-        description: "EU (Germany)"
       }
     }
   }],
@@ -29714,6 +29811,184 @@ var NODE_APP_ID_CONFIG_OPTIONS = {
   environmentVariableSelector: /* @__PURE__ */ __name((env2) => env2[UA_APP_ID_ENV_NAME], "environmentVariableSelector"),
   configFileSelector: /* @__PURE__ */ __name((profile) => profile[UA_APP_ID_INI_NAME] ?? profile[UA_APP_ID_INI_NAME_DEPRECATED], "configFileSelector"),
   default: import_middleware_user_agent.DEFAULT_UA_APP_ID
+};
+// Annotate the CommonJS export names for ESM import in node:
+
+0 && (0);
+
+
+
+/***/ }),
+
+/***/ 2561:
+/***/ ((module) => {
+
+"use strict";
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.ts
+var index_exports = {};
+__export(index_exports, {
+  XmlNode: () => XmlNode,
+  XmlText: () => XmlText
+});
+module.exports = __toCommonJS(index_exports);
+
+// src/escape-attribute.ts
+function escapeAttribute(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+__name(escapeAttribute, "escapeAttribute");
+
+// src/escape-element.ts
+function escapeElement(value) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r/g, "&#x0D;").replace(/\n/g, "&#x0A;").replace(/\u0085/g, "&#x85;").replace(/\u2028/, "&#x2028;");
+}
+__name(escapeElement, "escapeElement");
+
+// src/XmlText.ts
+var XmlText = class {
+  constructor(value) {
+    this.value = value;
+  }
+  static {
+    __name(this, "XmlText");
+  }
+  toString() {
+    return escapeElement("" + this.value);
+  }
+};
+
+// src/XmlNode.ts
+var XmlNode = class _XmlNode {
+  constructor(name, children = []) {
+    this.name = name;
+    this.children = children;
+  }
+  static {
+    __name(this, "XmlNode");
+  }
+  attributes = {};
+  static of(name, childText, withName) {
+    const node = new _XmlNode(name);
+    if (childText !== void 0) {
+      node.addChildNode(new XmlText(childText));
+    }
+    if (withName !== void 0) {
+      node.withName(withName);
+    }
+    return node;
+  }
+  withName(name) {
+    this.name = name;
+    return this;
+  }
+  addAttribute(name, value) {
+    this.attributes[name] = value;
+    return this;
+  }
+  addChildNode(child) {
+    this.children.push(child);
+    return this;
+  }
+  removeAttribute(name) {
+    delete this.attributes[name];
+    return this;
+  }
+  /**
+   * @internal
+   * Alias of {@link XmlNode#withName(string)} for codegen brevity.
+   */
+  n(name) {
+    this.name = name;
+    return this;
+  }
+  /**
+   * @internal
+   * Alias of {@link XmlNode#addChildNode(string)} for codegen brevity.
+   */
+  c(child) {
+    this.children.push(child);
+    return this;
+  }
+  /**
+   * @internal
+   * Checked version of {@link XmlNode#addAttribute(string)} for codegen brevity.
+   */
+  a(name, value) {
+    if (value != null) {
+      this.attributes[name] = value;
+    }
+    return this;
+  }
+  /**
+   * Create a child node.
+   * Used in serialization of string fields.
+   * @internal
+   */
+  cc(input, field, withName = field) {
+    if (input[field] != null) {
+      const node = _XmlNode.of(field, input[field]).withName(withName);
+      this.c(node);
+    }
+  }
+  /**
+   * Creates list child nodes.
+   * @internal
+   */
+  l(input, listName, memberName, valueProvider) {
+    if (input[listName] != null) {
+      const nodes = valueProvider();
+      nodes.map((node) => {
+        node.withName(memberName);
+        this.c(node);
+      });
+    }
+  }
+  /**
+   * Creates list child nodes with container.
+   * @internal
+   */
+  lc(input, listName, memberName, valueProvider) {
+    if (input[listName] != null) {
+      const nodes = valueProvider();
+      const containerNode = new _XmlNode(memberName);
+      nodes.map((node) => {
+        containerNode.c(node);
+      });
+      this.c(containerNode);
+    }
+  }
+  toString() {
+    const hasChildren = Boolean(this.children.length);
+    let xmlText = `<${this.name}`;
+    const attributes = this.attributes;
+    for (const attributeName of Object.keys(attributes)) {
+      const attribute = attributes[attributeName];
+      if (attribute != null) {
+        xmlText += ` ${attributeName}="${escapeAttribute("" + attribute)}"`;
+      }
+    }
+    return xmlText += !hasChildren ? "/>" : `>${this.children.map((c) => c.toString()).join("")}</${this.name}>`;
+  }
 };
 // Annotate the CommonJS export names for ESM import in node:
 
@@ -39641,13 +39916,13 @@ function extendedEncodeURIComponent(str) {
 
 // src/submodules/protocols/HttpBindingProtocol.ts
 var import_schema2 = __nccwpck_require__(6890);
+var import_serde = __nccwpck_require__(2430);
 var import_protocol_http2 = __nccwpck_require__(2356);
+var import_util_stream2 = __nccwpck_require__(4252);
 
 // src/submodules/protocols/HttpProtocol.ts
 var import_schema = __nccwpck_require__(6890);
-var import_serde = __nccwpck_require__(2430);
 var import_protocol_http = __nccwpck_require__(2356);
-var import_util_stream2 = __nccwpck_require__(4252);
 var HttpProtocol = class {
   constructor(options) {
     this.options = options;
@@ -39722,89 +39997,7 @@ var HttpProtocol = class {
     };
   }
   async deserializeHttpMessage(schema, context, response, arg4, arg5) {
-    let dataObject;
-    if (arg4 instanceof Set) {
-      dataObject = arg5;
-    } else {
-      dataObject = arg4;
-    }
-    const deserializer = this.deserializer;
-    const ns = import_schema.NormalizedSchema.of(schema);
-    const nonHttpBindingMembers = [];
-    for (const [memberName, memberSchema] of ns.structIterator()) {
-      const memberTraits = memberSchema.getMemberTraits();
-      if (memberTraits.httpPayload) {
-        const isStreaming = memberSchema.isStreaming();
-        if (isStreaming) {
-          const isEventStream = memberSchema.isStructSchema();
-          if (isEventStream) {
-            const context2 = this.serdeContext;
-            if (!context2.eventStreamMarshaller) {
-              throw new Error("@smithy/core - HttpProtocol: eventStreamMarshaller missing in serdeContext.");
-            }
-            const memberSchemas = memberSchema.getMemberSchemas();
-            dataObject[memberName] = context2.eventStreamMarshaller.deserialize(response.body, async (event) => {
-              const unionMember = Object.keys(event).find((key) => {
-                return key !== "__type";
-              }) ?? "";
-              if (unionMember in memberSchemas) {
-                const eventStreamSchema = memberSchemas[unionMember];
-                return {
-                  [unionMember]: await deserializer.read(eventStreamSchema, event[unionMember].body)
-                };
-              } else {
-                return {
-                  $unknown: event
-                };
-              }
-            });
-          } else {
-            dataObject[memberName] = (0, import_util_stream2.sdkStreamMixin)(response.body);
-          }
-        } else if (response.body) {
-          const bytes = await collectBody(response.body, context);
-          if (bytes.byteLength > 0) {
-            dataObject[memberName] = await deserializer.read(memberSchema, bytes);
-          }
-        }
-      } else if (memberTraits.httpHeader) {
-        const key = String(memberTraits.httpHeader).toLowerCase();
-        const value = response.headers[key];
-        if (null != value) {
-          if (memberSchema.isListSchema()) {
-            const headerListValueSchema = memberSchema.getValueSchema();
-            let sections;
-            if (headerListValueSchema.isTimestampSchema() && headerListValueSchema.getSchema() === import_schema.SCHEMA.TIMESTAMP_DEFAULT) {
-              sections = (0, import_serde.splitEvery)(value, ",", 2);
-            } else {
-              sections = (0, import_serde.splitHeader)(value);
-            }
-            const list = [];
-            for (const section of sections) {
-              list.push(await deserializer.read([headerListValueSchema, { httpHeader: key }], section.trim()));
-            }
-            dataObject[memberName] = list;
-          } else {
-            dataObject[memberName] = await deserializer.read(memberSchema, value);
-          }
-        }
-      } else if (memberTraits.httpPrefixHeaders !== void 0) {
-        dataObject[memberName] = {};
-        for (const [header, value] of Object.entries(response.headers)) {
-          if (header.startsWith(memberTraits.httpPrefixHeaders)) {
-            dataObject[memberName][header.slice(memberTraits.httpPrefixHeaders.length)] = await deserializer.read(
-              [memberSchema.getValueSchema(), { httpHeader: header }],
-              value
-            );
-          }
-        }
-      } else if (memberTraits.httpResponseCode) {
-        dataObject[memberName] = response.statusCode;
-      } else {
-        nonHttpBindingMembers.push(memberName);
-      }
-    }
-    return nonHttpBindingMembers;
+    return [];
   }
 };
 
@@ -39979,6 +40172,91 @@ var HttpBindingProtocol = class extends HttpProtocol {
       ...dataObject
     };
     return output;
+  }
+  async deserializeHttpMessage(schema, context, response, arg4, arg5) {
+    let dataObject;
+    if (arg4 instanceof Set) {
+      dataObject = arg5;
+    } else {
+      dataObject = arg4;
+    }
+    const deserializer = this.deserializer;
+    const ns = import_schema2.NormalizedSchema.of(schema);
+    const nonHttpBindingMembers = [];
+    for (const [memberName, memberSchema] of ns.structIterator()) {
+      const memberTraits = memberSchema.getMemberTraits();
+      if (memberTraits.httpPayload) {
+        const isStreaming = memberSchema.isStreaming();
+        if (isStreaming) {
+          const isEventStream = memberSchema.isStructSchema();
+          if (isEventStream) {
+            const context2 = this.serdeContext;
+            if (!context2.eventStreamMarshaller) {
+              throw new Error("@smithy/core - HttpProtocol: eventStreamMarshaller missing in serdeContext.");
+            }
+            const memberSchemas = memberSchema.getMemberSchemas();
+            dataObject[memberName] = context2.eventStreamMarshaller.deserialize(response.body, async (event) => {
+              const unionMember = Object.keys(event).find((key) => {
+                return key !== "__type";
+              }) ?? "";
+              if (unionMember in memberSchemas) {
+                const eventStreamSchema = memberSchemas[unionMember];
+                return {
+                  [unionMember]: await deserializer.read(eventStreamSchema, event[unionMember].body)
+                };
+              } else {
+                return {
+                  $unknown: event
+                };
+              }
+            });
+          } else {
+            dataObject[memberName] = (0, import_util_stream2.sdkStreamMixin)(response.body);
+          }
+        } else if (response.body) {
+          const bytes = await collectBody(response.body, context);
+          if (bytes.byteLength > 0) {
+            dataObject[memberName] = await deserializer.read(memberSchema, bytes);
+          }
+        }
+      } else if (memberTraits.httpHeader) {
+        const key = String(memberTraits.httpHeader).toLowerCase();
+        const value = response.headers[key];
+        if (null != value) {
+          if (memberSchema.isListSchema()) {
+            const headerListValueSchema = memberSchema.getValueSchema();
+            let sections;
+            if (headerListValueSchema.isTimestampSchema() && headerListValueSchema.getSchema() === import_schema2.SCHEMA.TIMESTAMP_DEFAULT) {
+              sections = (0, import_serde.splitEvery)(value, ",", 2);
+            } else {
+              sections = (0, import_serde.splitHeader)(value);
+            }
+            const list = [];
+            for (const section of sections) {
+              list.push(await deserializer.read([headerListValueSchema, { httpHeader: key }], section.trim()));
+            }
+            dataObject[memberName] = list;
+          } else {
+            dataObject[memberName] = await deserializer.read(memberSchema, value);
+          }
+        }
+      } else if (memberTraits.httpPrefixHeaders !== void 0) {
+        dataObject[memberName] = {};
+        for (const [header, value] of Object.entries(response.headers)) {
+          if (header.startsWith(memberTraits.httpPrefixHeaders)) {
+            dataObject[memberName][header.slice(memberTraits.httpPrefixHeaders.length)] = await deserializer.read(
+              [memberSchema.getValueSchema(), { httpHeader: header }],
+              value
+            );
+          }
+        }
+      } else if (memberTraits.httpResponseCode) {
+        dataObject[memberName] = response.statusCode;
+      } else {
+        nonHttpBindingMembers.push(memberName);
+      }
+    }
+    return nonHttpBindingMembers;
   }
 };
 
@@ -41068,6 +41346,18 @@ var NormalizedSchema = class _NormalizedSchema {
     return this.getSchema() === SCHEMA.STREAMING_BLOB;
   }
   /**
+   * This is a shortcut to avoid calling `getMergedTraits().idempotencyToken` on every string.
+   * @returns whether the schema has the idempotencyToken trait.
+   */
+  isIdempotencyToken() {
+    if (typeof this.traits === "number") {
+      return (this.traits & 4) === 4;
+    } else if (typeof this.traits === "object") {
+      return !!this.traits.idempotencyToken;
+    }
+    return false;
+  }
+  /**
    * @returns own traits merged with member traits, where member traits of the same trait key take priority.
    * This method is cached.
    */
@@ -41278,6 +41568,7 @@ __export(serde_exports, {
   expectShort: () => expectShort,
   expectString: () => expectString,
   expectUnion: () => expectUnion,
+  generateIdempotencyToken: () => import_uuid.v4,
   handleFloat: () => handleFloat,
   limitedParseDouble: () => limitedParseDouble,
   limitedParseFloat: () => limitedParseFloat,
@@ -41304,57 +41595,7 @@ __export(serde_exports, {
 module.exports = __toCommonJS(serde_exports);
 
 // src/submodules/serde/copyDocumentWithTransform.ts
-var import_schema = __nccwpck_require__(6890);
-var copyDocumentWithTransform = (source, schemaRef, transform = (_) => _) => {
-  const ns = import_schema.NormalizedSchema.of(schemaRef);
-  switch (typeof source) {
-    case "undefined":
-    case "boolean":
-    case "number":
-    case "string":
-    case "bigint":
-    case "symbol":
-      return transform(source, ns);
-    case "function":
-    case "object":
-      if (source === null) {
-        return transform(null, ns);
-      }
-      if (Array.isArray(source)) {
-        const newArray = new Array(source.length);
-        let i = 0;
-        for (const item of source) {
-          newArray[i++] = copyDocumentWithTransform(item, ns.getValueSchema(), transform);
-        }
-        return transform(newArray, ns);
-      }
-      if ("byteLength" in source) {
-        const newBytes = new Uint8Array(source.byteLength);
-        newBytes.set(source, 0);
-        return transform(newBytes, ns);
-      }
-      if (source instanceof Date) {
-        return transform(source, ns);
-      }
-      const newObject = {};
-      if (ns.isMapSchema()) {
-        for (const key of Object.keys(source)) {
-          newObject[key] = copyDocumentWithTransform(source[key], ns.getValueSchema(), transform);
-        }
-      } else if (ns.isStructSchema()) {
-        for (const [key, memberSchema] of ns.structIterator()) {
-          newObject[key] = copyDocumentWithTransform(source[key], memberSchema, transform);
-        }
-      } else if (ns.isDocumentSchema()) {
-        for (const key of Object.keys(source)) {
-          newObject[key] = copyDocumentWithTransform(source[key], ns.getValueSchema(), transform);
-        }
-      }
-      return transform(newObject, ns);
-    default:
-      return transform(source, ns);
-  }
-};
+var copyDocumentWithTransform = (source, schemaRef, transform = (_) => _) => source;
 
 // src/submodules/serde/parse-utils.ts
 var parseBoolean = (value) => {
@@ -41809,6 +42050,9 @@ var stripLeadingZeroes = (value) => {
   return value.slice(idx);
 };
 
+// src/submodules/serde/generateIdempotencyToken.ts
+var import_uuid = __nccwpck_require__(2048);
+
 // src/submodules/serde/lazy-json.ts
 var LazyJsonString = function LazyJsonString2(val) {
   const str = Object.assign(new String(val), {
@@ -41910,7 +42154,7 @@ var splitHeader = (value) => {
 };
 
 // src/submodules/serde/value/NumericValue.ts
-var NumericValue = class {
+var NumericValue = class _NumericValue {
   constructor(string, type) {
     this.string = string;
     this.type = type;
@@ -41937,15 +42181,19 @@ var NumericValue = class {
   toString() {
     return this.string;
   }
-  [Symbol.hasInstance](object) {
+  static [Symbol.hasInstance](object) {
     if (!object || typeof object !== "object") {
       return false;
     }
     const _nv = object;
+    const prototypeMatch = _NumericValue.prototype.isPrototypeOf(object.constructor?.prototype);
+    if (prototypeMatch) {
+      return prototypeMatch;
+    }
     if (typeof _nv.string === "string" && typeof _nv.type === "string" && _nv.constructor?.name === "NumericValue") {
       return true;
     }
-    return false;
+    return prototypeMatch;
   }
 };
 function nv(input) {
@@ -43044,6 +43292,7 @@ var getEndpointFromInstructions = /* @__PURE__ */ __name(async (commandInput, in
     }
     if (endpointFromConfig) {
       clientConfig.endpoint = () => Promise.resolve(toEndpointV1(endpointFromConfig));
+      clientConfig.isCustomEndpoint = true;
     }
   }
   const endpointParams = await resolveParams(commandInput, instructionsSupplier, clientConfig);
@@ -77637,7 +77886,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-sso","description":"AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native","version":"3.844.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-sso","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo sso"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.844.0","@aws-sdk/middleware-host-header":"3.840.0","@aws-sdk/middleware-logger":"3.840.0","@aws-sdk/middleware-recursion-detection":"3.840.0","@aws-sdk/middleware-user-agent":"3.844.0","@aws-sdk/region-config-resolver":"3.840.0","@aws-sdk/types":"3.840.0","@aws-sdk/util-endpoints":"3.844.0","@aws-sdk/util-user-agent-browser":"3.840.0","@aws-sdk/util-user-agent-node":"3.844.0","@smithy/config-resolver":"^4.1.4","@smithy/core":"^3.7.0","@smithy/fetch-http-handler":"^5.1.0","@smithy/hash-node":"^4.0.4","@smithy/invalid-dependency":"^4.0.4","@smithy/middleware-content-length":"^4.0.4","@smithy/middleware-endpoint":"^4.1.14","@smithy/middleware-retry":"^4.1.15","@smithy/middleware-serde":"^4.0.8","@smithy/middleware-stack":"^4.0.4","@smithy/node-config-provider":"^4.1.3","@smithy/node-http-handler":"^4.1.0","@smithy/protocol-http":"^5.1.2","@smithy/smithy-client":"^4.4.6","@smithy/types":"^4.3.1","@smithy/url-parser":"^4.0.4","@smithy/util-base64":"^4.0.0","@smithy/util-body-length-browser":"^4.0.0","@smithy/util-body-length-node":"^4.0.0","@smithy/util-defaults-mode-browser":"^4.0.22","@smithy/util-defaults-mode-node":"^4.0.22","@smithy/util-endpoints":"^3.0.6","@smithy/util-middleware":"^4.0.4","@smithy/util-retry":"^4.0.6","@smithy/util-utf8":"^4.0.0","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-sso","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-sso"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-sso","description":"AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native","version":"3.873.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-sso","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo sso"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.873.0","@aws-sdk/middleware-host-header":"3.873.0","@aws-sdk/middleware-logger":"3.873.0","@aws-sdk/middleware-recursion-detection":"3.873.0","@aws-sdk/middleware-user-agent":"3.873.0","@aws-sdk/region-config-resolver":"3.873.0","@aws-sdk/types":"3.862.0","@aws-sdk/util-endpoints":"3.873.0","@aws-sdk/util-user-agent-browser":"3.873.0","@aws-sdk/util-user-agent-node":"3.873.0","@smithy/config-resolver":"^4.1.5","@smithy/core":"^3.8.0","@smithy/fetch-http-handler":"^5.1.1","@smithy/hash-node":"^4.0.5","@smithy/invalid-dependency":"^4.0.5","@smithy/middleware-content-length":"^4.0.5","@smithy/middleware-endpoint":"^4.1.18","@smithy/middleware-retry":"^4.1.19","@smithy/middleware-serde":"^4.0.9","@smithy/middleware-stack":"^4.0.5","@smithy/node-config-provider":"^4.1.4","@smithy/node-http-handler":"^4.1.1","@smithy/protocol-http":"^5.1.3","@smithy/smithy-client":"^4.4.10","@smithy/types":"^4.3.2","@smithy/url-parser":"^4.0.5","@smithy/util-base64":"^4.0.0","@smithy/util-body-length-browser":"^4.0.0","@smithy/util-body-length-node":"^4.0.0","@smithy/util-defaults-mode-browser":"^4.0.26","@smithy/util-defaults-mode-node":"^4.0.26","@smithy/util-endpoints":"^3.0.7","@smithy/util-middleware":"^4.0.5","@smithy/util-retry":"^4.0.7","@smithy/util-utf8":"^4.0.0","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-sso","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-sso"}}');
 
 /***/ }),
 
@@ -77645,7 +77894,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-sso","descrip
 /***/ ((module) => {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/nested-clients","version":"3.844.0","description":"Nested clients for AWS SDK packages.","main":"./dist-cjs/index.js","module":"./dist-es/index.js","types":"./dist-types/index.d.ts","scripts":{"build":"yarn lint && concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline nested-clients","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","lint":"node ../../scripts/validation/submodules-linter.js --pkg nested-clients","test":"yarn g:vitest run","test:watch":"yarn g:vitest watch"},"engines":{"node":">=18.0.0"},"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.844.0","@aws-sdk/middleware-host-header":"3.840.0","@aws-sdk/middleware-logger":"3.840.0","@aws-sdk/middleware-recursion-detection":"3.840.0","@aws-sdk/middleware-user-agent":"3.844.0","@aws-sdk/region-config-resolver":"3.840.0","@aws-sdk/types":"3.840.0","@aws-sdk/util-endpoints":"3.844.0","@aws-sdk/util-user-agent-browser":"3.840.0","@aws-sdk/util-user-agent-node":"3.844.0","@smithy/config-resolver":"^4.1.4","@smithy/core":"^3.7.0","@smithy/fetch-http-handler":"^5.1.0","@smithy/hash-node":"^4.0.4","@smithy/invalid-dependency":"^4.0.4","@smithy/middleware-content-length":"^4.0.4","@smithy/middleware-endpoint":"^4.1.14","@smithy/middleware-retry":"^4.1.15","@smithy/middleware-serde":"^4.0.8","@smithy/middleware-stack":"^4.0.4","@smithy/node-config-provider":"^4.1.3","@smithy/node-http-handler":"^4.1.0","@smithy/protocol-http":"^5.1.2","@smithy/smithy-client":"^4.4.6","@smithy/types":"^4.3.1","@smithy/url-parser":"^4.0.4","@smithy/util-base64":"^4.0.0","@smithy/util-body-length-browser":"^4.0.0","@smithy/util-body-length-node":"^4.0.0","@smithy/util-defaults-mode-browser":"^4.0.22","@smithy/util-defaults-mode-node":"^4.0.22","@smithy/util-endpoints":"^3.0.6","@smithy/util-middleware":"^4.0.4","@smithy/util-retry":"^4.0.6","@smithy/util-utf8":"^4.0.0","tslib":"^2.6.2"},"devDependencies":{"concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["./sso-oidc.d.ts","./sso-oidc.js","./sts.d.ts","./sts.js","dist-*/**"],"browser":{"./dist-es/submodules/sso-oidc/runtimeConfig":"./dist-es/submodules/sso-oidc/runtimeConfig.browser","./dist-es/submodules/sts/runtimeConfig":"./dist-es/submodules/sts/runtimeConfig.browser"},"react-native":{},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/packages/nested-clients","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"packages/nested-clients"},"exports":{"./sso-oidc":{"types":"./dist-types/submodules/sso-oidc/index.d.ts","module":"./dist-es/submodules/sso-oidc/index.js","node":"./dist-cjs/submodules/sso-oidc/index.js","import":"./dist-es/submodules/sso-oidc/index.js","require":"./dist-cjs/submodules/sso-oidc/index.js"},"./sts":{"types":"./dist-types/submodules/sts/index.d.ts","module":"./dist-es/submodules/sts/index.js","node":"./dist-cjs/submodules/sts/index.js","import":"./dist-es/submodules/sts/index.js","require":"./dist-cjs/submodules/sts/index.js"}}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/nested-clients","version":"3.873.0","description":"Nested clients for AWS SDK packages.","main":"./dist-cjs/index.js","module":"./dist-es/index.js","types":"./dist-types/index.d.ts","scripts":{"build":"yarn lint && concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline nested-clients","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","lint":"node ../../scripts/validation/submodules-linter.js --pkg nested-clients","test":"yarn g:vitest run","test:watch":"yarn g:vitest watch"},"engines":{"node":">=18.0.0"},"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.873.0","@aws-sdk/middleware-host-header":"3.873.0","@aws-sdk/middleware-logger":"3.873.0","@aws-sdk/middleware-recursion-detection":"3.873.0","@aws-sdk/middleware-user-agent":"3.873.0","@aws-sdk/region-config-resolver":"3.873.0","@aws-sdk/types":"3.862.0","@aws-sdk/util-endpoints":"3.873.0","@aws-sdk/util-user-agent-browser":"3.873.0","@aws-sdk/util-user-agent-node":"3.873.0","@smithy/config-resolver":"^4.1.5","@smithy/core":"^3.8.0","@smithy/fetch-http-handler":"^5.1.1","@smithy/hash-node":"^4.0.5","@smithy/invalid-dependency":"^4.0.5","@smithy/middleware-content-length":"^4.0.5","@smithy/middleware-endpoint":"^4.1.18","@smithy/middleware-retry":"^4.1.19","@smithy/middleware-serde":"^4.0.9","@smithy/middleware-stack":"^4.0.5","@smithy/node-config-provider":"^4.1.4","@smithy/node-http-handler":"^4.1.1","@smithy/protocol-http":"^5.1.3","@smithy/smithy-client":"^4.4.10","@smithy/types":"^4.3.2","@smithy/url-parser":"^4.0.5","@smithy/util-base64":"^4.0.0","@smithy/util-body-length-browser":"^4.0.0","@smithy/util-body-length-node":"^4.0.0","@smithy/util-defaults-mode-browser":"^4.0.26","@smithy/util-defaults-mode-node":"^4.0.26","@smithy/util-endpoints":"^3.0.7","@smithy/util-middleware":"^4.0.5","@smithy/util-retry":"^4.0.7","@smithy/util-utf8":"^4.0.0","tslib":"^2.6.2"},"devDependencies":{"concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["./sso-oidc.d.ts","./sso-oidc.js","./sts.d.ts","./sts.js","dist-*/**"],"browser":{"./dist-es/submodules/sso-oidc/runtimeConfig":"./dist-es/submodules/sso-oidc/runtimeConfig.browser","./dist-es/submodules/sts/runtimeConfig":"./dist-es/submodules/sts/runtimeConfig.browser"},"react-native":{},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/packages/nested-clients","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"packages/nested-clients"},"exports":{"./sso-oidc":{"types":"./dist-types/submodules/sso-oidc/index.d.ts","module":"./dist-es/submodules/sso-oidc/index.js","node":"./dist-cjs/submodules/sso-oidc/index.js","import":"./dist-es/submodules/sso-oidc/index.js","require":"./dist-cjs/submodules/sso-oidc/index.js"},"./sts":{"types":"./dist-types/submodules/sts/index.d.ts","module":"./dist-es/submodules/sts/index.js","node":"./dist-cjs/submodules/sts/index.js","import":"./dist-es/submodules/sts/index.js","require":"./dist-cjs/submodules/sts/index.js"}}}');
 
 /***/ }),
 
@@ -77653,7 +77902,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/nested-clients","ver
 /***/ ((module) => {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-cloudfront","description":"AWS SDK for JavaScript Cloudfront Client for Node.js, Browser and React Native","version":"3.844.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-cloudfront","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo cloudfront"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.844.0","@aws-sdk/credential-provider-node":"3.844.0","@aws-sdk/middleware-host-header":"3.840.0","@aws-sdk/middleware-logger":"3.840.0","@aws-sdk/middleware-recursion-detection":"3.840.0","@aws-sdk/middleware-user-agent":"3.844.0","@aws-sdk/region-config-resolver":"3.840.0","@aws-sdk/types":"3.840.0","@aws-sdk/util-endpoints":"3.844.0","@aws-sdk/util-user-agent-browser":"3.840.0","@aws-sdk/util-user-agent-node":"3.844.0","@aws-sdk/xml-builder":"3.821.0","@smithy/config-resolver":"^4.1.4","@smithy/core":"^3.7.0","@smithy/fetch-http-handler":"^5.1.0","@smithy/hash-node":"^4.0.4","@smithy/invalid-dependency":"^4.0.4","@smithy/middleware-content-length":"^4.0.4","@smithy/middleware-endpoint":"^4.1.14","@smithy/middleware-retry":"^4.1.15","@smithy/middleware-serde":"^4.0.8","@smithy/middleware-stack":"^4.0.4","@smithy/node-config-provider":"^4.1.3","@smithy/node-http-handler":"^4.1.0","@smithy/protocol-http":"^5.1.2","@smithy/smithy-client":"^4.4.6","@smithy/types":"^4.3.1","@smithy/url-parser":"^4.0.4","@smithy/util-base64":"^4.0.0","@smithy/util-body-length-browser":"^4.0.0","@smithy/util-body-length-node":"^4.0.0","@smithy/util-defaults-mode-browser":"^4.0.22","@smithy/util-defaults-mode-node":"^4.0.22","@smithy/util-endpoints":"^3.0.6","@smithy/util-middleware":"^4.0.4","@smithy/util-retry":"^4.0.6","@smithy/util-stream":"^4.2.3","@smithy/util-utf8":"^4.0.0","@smithy/util-waiter":"^4.0.6","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-cloudfront","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-cloudfront"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-cloudfront","description":"AWS SDK for JavaScript Cloudfront Client for Node.js, Browser and React Native","version":"3.873.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-cloudfront","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo cloudfront"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.873.0","@aws-sdk/credential-provider-node":"3.873.0","@aws-sdk/middleware-host-header":"3.873.0","@aws-sdk/middleware-logger":"3.873.0","@aws-sdk/middleware-recursion-detection":"3.873.0","@aws-sdk/middleware-user-agent":"3.873.0","@aws-sdk/region-config-resolver":"3.873.0","@aws-sdk/types":"3.862.0","@aws-sdk/util-endpoints":"3.873.0","@aws-sdk/util-user-agent-browser":"3.873.0","@aws-sdk/util-user-agent-node":"3.873.0","@aws-sdk/xml-builder":"3.873.0","@smithy/config-resolver":"^4.1.5","@smithy/core":"^3.8.0","@smithy/fetch-http-handler":"^5.1.1","@smithy/hash-node":"^4.0.5","@smithy/invalid-dependency":"^4.0.5","@smithy/middleware-content-length":"^4.0.5","@smithy/middleware-endpoint":"^4.1.18","@smithy/middleware-retry":"^4.1.19","@smithy/middleware-serde":"^4.0.9","@smithy/middleware-stack":"^4.0.5","@smithy/node-config-provider":"^4.1.4","@smithy/node-http-handler":"^4.1.1","@smithy/protocol-http":"^5.1.3","@smithy/smithy-client":"^4.4.10","@smithy/types":"^4.3.2","@smithy/url-parser":"^4.0.5","@smithy/util-base64":"^4.0.0","@smithy/util-body-length-browser":"^4.0.0","@smithy/util-body-length-node":"^4.0.0","@smithy/util-defaults-mode-browser":"^4.0.26","@smithy/util-defaults-mode-node":"^4.0.26","@smithy/util-endpoints":"^3.0.7","@smithy/util-middleware":"^4.0.5","@smithy/util-retry":"^4.0.7","@smithy/util-stream":"^4.2.4","@smithy/util-utf8":"^4.0.0","@smithy/util-waiter":"^4.0.7","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-cloudfront","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-cloudfront"}}');
 
 /***/ }),
 
