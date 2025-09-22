@@ -79776,6 +79776,7 @@ async function run() {
         const distributionIds = await getDistributionIdsByTag();
         const pathsInput = core.getInput("paths");
         const waitForInvalidation = core.getInput("wait") === "true";
+        const maxWaitTime = core.getInput("timeout");
 
         // Split the comma-separated string into an array
         let paths;
@@ -79793,7 +79794,7 @@ async function run() {
         core.info(`Invalidation paths: ${JSON.stringify(paths)}`);
 
         for (const distributionId of distributionIds) {
-            await createInvalidation(distributionId, paths, waitForInvalidation);
+            await createInvalidation(distributionId, paths, waitForInvalidation, maxWaitTime);
         }
     } catch (error) {
         core.setFailed(error.message);
@@ -79823,7 +79824,7 @@ async function getDistributionIdsByTag() {
     });
 }
 
-async function createInvalidation(distributionId, paths, waitForInvalidation) {
+async function createInvalidation(distributionId, paths, waitForInvalidation, maxWaitTime) {
     const client = new _aws_sdk_client_cloudfront__WEBPACK_IMPORTED_MODULE_1__.CloudFrontClient();
     const params = {
         DistributionId: distributionId,
@@ -79855,7 +79856,7 @@ async function createInvalidation(distributionId, paths, waitForInvalidation) {
                 core.info(`Waiting for invalidation ${invalidationId} to complete...`);
                 const waiterParams = {
                     client,
-                    maxWaitTime: 300, // Maximum wait time in seconds
+                    maxWaitTime: maxWaitTime, // Maximum wait time in seconds
                 };
                 await (0,_aws_sdk_client_cloudfront__WEBPACK_IMPORTED_MODULE_1__.waitUntilInvalidationCompleted)(
                     { ...waiterParams },
