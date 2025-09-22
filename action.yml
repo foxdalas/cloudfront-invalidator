@@ -14,6 +14,10 @@ inputs:
     description: "Wait for the invalidation to complete"
     required: false
     default: "true"
+  timeout:
+    description: "Maximum wait time in seconds"
+    required: false
+    default: "600"
 runs:
   using: node20
   main: dist/index.js
