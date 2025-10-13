@@ -3,7 +3,6 @@ exports.id = 579;
 exports.ids = [579];
 exports.modules = {
   /***/ 6579: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
-    var schema = __webpack_require__(6890);
     var utilUtf8 = __webpack_require__(1577);
 
     class EventStreamSerde {
@@ -167,12 +166,15 @@ exports.modules = {
         let eventType = unionMember;
         let explicitPayloadMember = null;
         let explicitPayloadContentType;
-        const isKnownSchema = unionSchema.hasMemberSchema(unionMember);
+        const isKnownSchema = (() => {
+          const struct = unionSchema.getSchema();
+          return struct.memberNames.includes(unionMember);
+        })();
         const additionalHeaders = {};
         if (!isKnownSchema) {
           const [type, value] = event[unionMember];
           eventType = type;
-          serializer.write(schema.SCHEMA.DOCUMENT, value);
+          serializer.write(15, value);
         } else {
           const eventSchema = unionSchema.getMemberSchema(unionMember);
           if (eventSchema.isStructSchema()) {
