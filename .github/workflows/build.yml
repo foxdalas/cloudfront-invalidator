@@ -44,7 +44,7 @@ jobs:
       - name: Fix Format
         run: npm run fix:format
 
-      - uses: stefanzweifel/git-auto-commit-action@v6
+      - uses: stefanzweifel/git-auto-commit-action@v7
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
           commit_message: "feat(dist): update dist/index.js"
