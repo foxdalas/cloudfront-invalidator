@@ -1,18 +1,18 @@
 "use strict";
-exports.id = 286;
-exports.ids = [286];
+exports.id = 869;
+exports.ids = [869];
 exports.modules = {
-  /***/ 5286: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+  /***/ 5869: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
     var sharedIniFileLoader = __webpack_require__(4964);
     var propertyProvider = __webpack_require__(1238);
-    var client = __webpack_require__(1101);
+    var client = __webpack_require__(5152);
 
     const resolveCredentialSource = (credentialSource, profileName, logger) => {
       const sourceProvidersMap = {
         EcsContainer: async (options) => {
           const { fromHttp } = await __webpack_require__
-            .e(/* import() */ 144)
-            .then(__webpack_require__.bind(__webpack_require__, 5144));
+            .e(/* import() */ 605)
+            .then(__webpack_require__.bind(__webpack_require__, 8605));
           const { fromContainerMetadata } = await __webpack_require__
             .e(/* import() */ 566)
             .then(__webpack_require__.t.bind(__webpack_require__, 566, 19));
@@ -39,7 +39,7 @@ exports.modules = {
             "@aws-sdk/credential-provider-ini - credential_source is Environment",
           );
           const { fromEnv } = await Promise.resolve(/* import() */).then(
-            __webpack_require__.t.bind(__webpack_require__, 405, 19),
+            __webpack_require__.t.bind(__webpack_require__, 5606, 19),
           );
           return async () => fromEnv(options)().then(setNamedProvider);
         },
@@ -108,9 +108,12 @@ exports.modules = {
       const profileData = profiles[profileName];
       const { source_profile, region } = profileData;
       if (!options.roleAssumer) {
-        const { getDefaultRoleAssumer } = await __webpack_require__
-          .e(/* import() */ 795)
-          .then(__webpack_require__.t.bind(__webpack_require__, 6795, 23));
+        const { getDefaultRoleAssumer } = await Promise.all(
+          /* import() */ [
+            __webpack_require__.e(80),
+            __webpack_require__.e(136),
+          ],
+        ).then(__webpack_require__.t.bind(__webpack_require__, 1136, 23));
         options.roleAssumer = getDefaultRoleAssumer(
           {
             ...options.clientConfig,
@@ -201,8 +204,8 @@ exports.modules = {
       typeof arg.credential_process === "string";
     const resolveProcessCredentials = async (options, profile) =>
       __webpack_require__
-        .e(/* import() */ 483)
-        .then(__webpack_require__.t.bind(__webpack_require__, 4483, 19))
+        .e(/* import() */ 360)
+        .then(__webpack_require__.t.bind(__webpack_require__, 5360, 19))
         .then(({ fromProcess }) =>
           fromProcess({
             ...options,
@@ -222,8 +225,8 @@ exports.modules = {
       options = {},
     ) => {
       const { fromSSO } = await __webpack_require__
-        .e(/* import() */ 197)
-        .then(__webpack_require__.t.bind(__webpack_require__, 3197, 19));
+        .e(/* import() */ 998)
+        .then(__webpack_require__.t.bind(__webpack_require__, 998, 19));
       return fromSSO({
         profile,
         logger: options.logger,
@@ -288,9 +291,13 @@ exports.modules = {
       ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1;
     const resolveWebIdentityCredentials = async (profile, options) =>
       Promise.all(
-        /* import() */ [__webpack_require__.e(795), __webpack_require__.e(741)],
+        /* import() */ [
+          __webpack_require__.e(80),
+          __webpack_require__.e(136),
+          __webpack_require__.e(956),
+        ],
       )
-        .then(__webpack_require__.t.bind(__webpack_require__, 741, 23))
+        .then(__webpack_require__.t.bind(__webpack_require__, 9956, 23))
         .then(({ fromTokenFile }) =>
           fromTokenFile({
             webIdentityTokenFile: profile.web_identity_token_file,
@@ -381,4 +388,4 @@ exports.modules = {
     /***/
   },
 };
-//# sourceMappingURL=286.index.js.map
+//# sourceMappingURL=869.index.js.map
