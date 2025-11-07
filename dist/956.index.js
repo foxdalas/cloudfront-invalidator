@@ -15,7 +15,7 @@ exports.modules = {
     const ENV_ROLE_SESSION_NAME = "AWS_ROLE_SESSION_NAME";
     const fromTokenFile =
       (init = {}) =>
-      async () => {
+      async (awsIdentityProperties) => {
         init.logger?.debug(
           "@aws-sdk/credential-provider-web-identity - fromTokenFile",
         );
@@ -41,7 +41,7 @@ exports.modules = {
             (0, fs_1.readFileSync)(webIdentityTokenFile, { encoding: "ascii" }),
           roleArn,
           roleSessionName,
-        })();
+        })(awsIdentityProperties);
         if (webIdentityTokenFile === process.env[ENV_TOKEN_FILE]) {
           (0, client_1.setCredentialFeature)(
             credentials,

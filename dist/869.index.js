@@ -108,12 +108,9 @@ exports.modules = {
       const profileData = profiles[profileName];
       const { source_profile, region } = profileData;
       if (!options.roleAssumer) {
-        const { getDefaultRoleAssumer } = await Promise.all(
-          /* import() */ [
-            __webpack_require__.e(80),
-            __webpack_require__.e(136),
-          ],
-        ).then(__webpack_require__.t.bind(__webpack_require__, 1136, 23));
+        const { getDefaultRoleAssumer } = await __webpack_require__
+          .e(/* import() */ 136)
+          .then(__webpack_require__.t.bind(__webpack_require__, 1136, 23));
         options.roleAssumer = getDefaultRoleAssumer(
           {
             ...options.clientConfig,
@@ -291,11 +288,7 @@ exports.modules = {
       ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1;
     const resolveWebIdentityCredentials = async (profile, options) =>
       Promise.all(
-        /* import() */ [
-          __webpack_require__.e(80),
-          __webpack_require__.e(136),
-          __webpack_require__.e(956),
-        ],
+        /* import() */ [__webpack_require__.e(136), __webpack_require__.e(956)],
       )
         .then(__webpack_require__.t.bind(__webpack_require__, 9956, 23))
         .then(({ fromTokenFile }) =>

@@ -4270,7 +4270,7 @@ require("./sourcemap-register.js");
 
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.defaultEndpointResolver = void 0;
-      const util_endpoints_1 = __nccwpck_require__(2217);
+      const util_endpoints_1 = __nccwpck_require__(3068);
       const util_endpoints_2 = __nccwpck_require__(9674);
       const ruleset_1 = __nccwpck_require__(8105);
       const cache = new util_endpoints_2.EndpointCache({
@@ -4523,9 +4523,9 @@ require("./sourcemap-register.js");
       "use strict";
       var __webpack_unused_export__;
 
-      var middlewareHostHeader = __nccwpck_require__(3131);
-      var middlewareLogger = __nccwpck_require__(7285);
-      var middlewareRecursionDetection = __nccwpck_require__(3097);
+      var middlewareHostHeader = __nccwpck_require__(2590);
+      var middlewareLogger = __nccwpck_require__(5242);
+      var middlewareRecursionDetection = __nccwpck_require__(1568);
       var middlewareUserAgent = __nccwpck_require__(8044);
       var configResolver = __nccwpck_require__(9316);
       var core = __nccwpck_require__(402);
@@ -4535,11 +4535,11 @@ require("./sourcemap-register.js");
       var smithyClient = __nccwpck_require__(1411);
       var httpAuthSchemeProvider = __nccwpck_require__(1210);
       var runtimeConfig = __nccwpck_require__(6251);
-      var regionConfigResolver = __nccwpck_require__(8530);
+      var regionConfigResolver = __nccwpck_require__(6463);
       var protocolHttp = __nccwpck_require__(2356);
       var middlewareSerde = __nccwpck_require__(3255);
       var core$1 = __nccwpck_require__(973);
-      var xmlBuilder = __nccwpck_require__(2561);
+      var xmlBuilder = __nccwpck_require__(4274);
       var utilWaiter = __nccwpck_require__(5290);
 
       const resolveClientEndpointParameters = (options) => {
@@ -25847,7 +25847,7 @@ require("./sourcemap-register.js");
       var utilBase64 = __nccwpck_require__(8385);
       var smithyClient = __nccwpck_require__(1411);
       var utilUtf8 = __nccwpck_require__(1577);
-      var xmlBuilder = __nccwpck_require__(2561);
+      var xmlBuilder = __nccwpck_require__(4274);
 
       const state = {
         warningEmitted: false,
@@ -28462,10 +28462,63 @@ More information can be found at: https://a.co/74kJMmI`);
         return fromInstanceMetadata(init);
       };
 
+      function memoizeChain(providers, treatAsExpired) {
+        const chain = internalCreateChain(providers);
+        let activeLock;
+        let passiveLock;
+        let credentials;
+        const provider = async (options) => {
+          if (options?.forceRefresh) {
+            return await chain(options);
+          }
+          if (credentials?.expiration) {
+            if (credentials?.expiration?.getTime() < Date.now()) {
+              credentials = undefined;
+            }
+          }
+          if (activeLock) {
+            await activeLock;
+          } else if (!credentials || treatAsExpired?.(credentials)) {
+            if (credentials) {
+              if (!passiveLock) {
+                passiveLock = chain(options).then((c) => {
+                  credentials = c;
+                  passiveLock = undefined;
+                });
+              }
+            } else {
+              activeLock = chain(options).then((c) => {
+                credentials = c;
+                activeLock = undefined;
+              });
+              return provider(options);
+            }
+          }
+          return credentials;
+        };
+        return provider;
+      }
+      const internalCreateChain =
+        (providers) => async (awsIdentityProperties) => {
+          let lastProviderError;
+          for (const provider of providers) {
+            try {
+              return await provider(awsIdentityProperties);
+            } catch (err) {
+              lastProviderError = err;
+              if (err?.tryNextLink) {
+                continue;
+              }
+              throw err;
+            }
+          }
+          throw lastProviderError;
+        };
+
       let multipleCredentialSourceWarningEmitted = false;
       const defaultProvider = (init = {}) =>
-        propertyProvider.memoize(
-          propertyProvider.chain(
+        memoizeChain(
+          [
             async () => {
               const profile =
                 init.profile ?? process.env[sharedIniFileLoader.ENV_PROFILE];
@@ -28505,7 +28558,7 @@ More information can be found at: https://a.co/74kJMmI`);
               );
               return credentialProviderEnv.fromEnv(init)();
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromSSO",
               );
@@ -28533,9 +28586,9 @@ More information can be found at: https://a.co/74kJMmI`);
                 .then(
                   __nccwpck_require__.t.bind(__nccwpck_require__, 3197, 19),
                 );
-              return fromSSO(init)();
+              return fromSSO(init)(awsIdentityProperties);
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromIni",
               );
@@ -28544,9 +28597,9 @@ More information can be found at: https://a.co/74kJMmI`);
                 .then(
                   __nccwpck_require__.t.bind(__nccwpck_require__, 5286, 19),
                 );
-              return fromIni(init)();
+              return fromIni(init)(awsIdentityProperties);
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromProcess",
               );
@@ -28555,9 +28608,9 @@ More information can be found at: https://a.co/74kJMmI`);
                 .then(
                   __nccwpck_require__.t.bind(__nccwpck_require__, 4483, 19),
                 );
-              return fromProcess(init)();
+              return fromProcess(init)(awsIdentityProperties);
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromTokenFile",
               );
@@ -28567,7 +28620,7 @@ More information can be found at: https://a.co/74kJMmI`);
                   __nccwpck_require__.e(741),
                 ],
               ).then(__nccwpck_require__.t.bind(__nccwpck_require__, 741, 23));
-              return fromTokenFile(init)();
+              return fromTokenFile(init)(awsIdentityProperties);
             },
             async () => {
               init.logger?.debug(
@@ -28584,9 +28637,8 @@ More information can be found at: https://a.co/74kJMmI`);
                 },
               );
             },
-          ),
+          ],
           credentialsTreatedAsExpired,
-          credentialsWillNeedRefresh,
         );
       const credentialsWillNeedRefresh = (credentials) =>
         credentials?.expiration !== undefined;
@@ -28601,220 +28653,6 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
-    /***/ 3131: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var protocolHttp = __nccwpck_require__(2356);
-
-      function resolveHostHeaderConfig(input) {
-        return input;
-      }
-      const hostHeaderMiddleware = (options) => (next) => async (args) => {
-        if (!protocolHttp.HttpRequest.isInstance(args.request))
-          return next(args);
-        const { request } = args;
-        const { handlerProtocol = "" } = options.requestHandler.metadata || {};
-        if (
-          handlerProtocol.indexOf("h2") >= 0 &&
-          !request.headers[":authority"]
-        ) {
-          delete request.headers["host"];
-          request.headers[":authority"] =
-            request.hostname + (request.port ? ":" + request.port : "");
-        } else if (!request.headers["host"]) {
-          let host = request.hostname;
-          if (request.port != null) host += `:${request.port}`;
-          request.headers["host"] = host;
-        }
-        return next(args);
-      };
-      const hostHeaderMiddlewareOptions = {
-        name: "hostHeaderMiddleware",
-        step: "build",
-        priority: "low",
-        tags: ["HOST"],
-        override: true,
-      };
-      const getHostHeaderPlugin = (options) => ({
-        applyToStack: (clientStack) => {
-          clientStack.add(
-            hostHeaderMiddleware(options),
-            hostHeaderMiddlewareOptions,
-          );
-        },
-      });
-
-      exports.getHostHeaderPlugin = getHostHeaderPlugin;
-      exports.hostHeaderMiddleware = hostHeaderMiddleware;
-      exports.hostHeaderMiddlewareOptions = hostHeaderMiddlewareOptions;
-      exports.resolveHostHeaderConfig = resolveHostHeaderConfig;
-
-      /***/
-    },
-
-    /***/ 7285: /***/ (__unused_webpack_module, exports) => {
-      "use strict";
-
-      const loggerMiddleware = () => (next, context) => async (args) => {
-        try {
-          const response = await next(args);
-          const {
-            clientName,
-            commandName,
-            logger,
-            dynamoDbDocumentClientOptions = {},
-          } = context;
-          const {
-            overrideInputFilterSensitiveLog,
-            overrideOutputFilterSensitiveLog,
-          } = dynamoDbDocumentClientOptions;
-          const inputFilterSensitiveLog =
-            overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
-          const outputFilterSensitiveLog =
-            overrideOutputFilterSensitiveLog ??
-            context.outputFilterSensitiveLog;
-          const { $metadata, ...outputWithoutMetadata } = response.output;
-          logger?.info?.({
-            clientName,
-            commandName,
-            input: inputFilterSensitiveLog(args.input),
-            output: outputFilterSensitiveLog(outputWithoutMetadata),
-            metadata: $metadata,
-          });
-          return response;
-        } catch (error) {
-          const {
-            clientName,
-            commandName,
-            logger,
-            dynamoDbDocumentClientOptions = {},
-          } = context;
-          const { overrideInputFilterSensitiveLog } =
-            dynamoDbDocumentClientOptions;
-          const inputFilterSensitiveLog =
-            overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
-          logger?.error?.({
-            clientName,
-            commandName,
-            input: inputFilterSensitiveLog(args.input),
-            error,
-            metadata: error.$metadata,
-          });
-          throw error;
-        }
-      };
-      const loggerMiddlewareOptions = {
-        name: "loggerMiddleware",
-        tags: ["LOGGER"],
-        step: "initialize",
-        override: true,
-      };
-      const getLoggerPlugin = (options) => ({
-        applyToStack: (clientStack) => {
-          clientStack.add(loggerMiddleware(), loggerMiddlewareOptions);
-        },
-      });
-
-      exports.getLoggerPlugin = getLoggerPlugin;
-      exports.loggerMiddleware = loggerMiddleware;
-      exports.loggerMiddlewareOptions = loggerMiddlewareOptions;
-
-      /***/
-    },
-
-    /***/ 3097: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var recursionDetectionMiddleware = __nccwpck_require__(4234);
-
-      const recursionDetectionMiddlewareOptions = {
-        step: "build",
-        tags: ["RECURSION_DETECTION"],
-        name: "recursionDetectionMiddleware",
-        override: true,
-        priority: "low",
-      };
-
-      const getRecursionDetectionPlugin = (options) => ({
-        applyToStack: (clientStack) => {
-          clientStack.add(
-            recursionDetectionMiddleware.recursionDetectionMiddleware(),
-            recursionDetectionMiddlewareOptions,
-          );
-        },
-      });
-
-      exports.getRecursionDetectionPlugin = getRecursionDetectionPlugin;
-      Object.keys(recursionDetectionMiddleware).forEach(function (k) {
-        if (
-          k !== "default" &&
-          !Object.prototype.hasOwnProperty.call(exports, k)
-        )
-          Object.defineProperty(exports, k, {
-            enumerable: true,
-            get: function () {
-              return recursionDetectionMiddleware[k];
-            },
-          });
-      });
-
-      /***/
-    },
-
-    /***/ 4234: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.recursionDetectionMiddleware = void 0;
-      const lambda_invoke_store_1 = __nccwpck_require__(7453);
-      const protocol_http_1 = __nccwpck_require__(2356);
-      const TRACE_ID_HEADER_NAME = "X-Amzn-Trace-Id";
-      const ENV_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME";
-      const ENV_TRACE_ID = "_X_AMZN_TRACE_ID";
-      const recursionDetectionMiddleware = () => (next) => async (args) => {
-        const { request } = args;
-        if (!protocol_http_1.HttpRequest.isInstance(request)) {
-          return next(args);
-        }
-        const traceIdHeader =
-          Object.keys(request.headers ?? {}).find(
-            (h) => h.toLowerCase() === TRACE_ID_HEADER_NAME.toLowerCase(),
-          ) ?? TRACE_ID_HEADER_NAME;
-        if (request.headers.hasOwnProperty(traceIdHeader)) {
-          return next(args);
-        }
-        const functionName = process.env[ENV_LAMBDA_FUNCTION_NAME];
-        const traceIdFromEnv = process.env[ENV_TRACE_ID];
-        const traceIdFromInvokeStore =
-          lambda_invoke_store_1.InvokeStore.getXRayTraceId();
-        const traceId = traceIdFromInvokeStore ?? traceIdFromEnv;
-        const nonEmptyString = (str) =>
-          typeof str === "string" && str.length > 0;
-        if (nonEmptyString(functionName) && nonEmptyString(traceId)) {
-          request.headers[TRACE_ID_HEADER_NAME] = traceId;
-        }
-        return next({
-          ...args,
-          request,
-        });
-      };
-      exports.recursionDetectionMiddleware = recursionDetectionMiddleware;
-
-      /***/
-    },
-
     /***/ 8044: /***/ (
       __unused_webpack_module,
       exports,
@@ -28823,7 +28661,7 @@ More information can be found at: https://a.co/74kJMmI`);
       "use strict";
 
       var core = __nccwpck_require__(402);
-      var utilEndpoints = __nccwpck_require__(2217);
+      var utilEndpoints = __nccwpck_require__(3068);
       var protocolHttp = __nccwpck_require__(2356);
       var core$1 = __nccwpck_require__(973);
 
@@ -28921,8 +28759,8 @@ More information can be found at: https://a.co/74kJMmI`);
       const X_AMZ_USER_AGENT = "x-amz-user-agent";
       const SPACE = " ";
       const UA_NAME_SEPARATOR = "/";
-      const UA_NAME_ESCAPE_REGEX = /[^\!\$\%\&\'\*\+\-\.\^\_\`\|\~\d\w]/g;
-      const UA_VALUE_ESCAPE_REGEX = /[^\!\$\%\&\'\*\+\-\.\^\_\`\|\~\d\w\#]/g;
+      const UA_NAME_ESCAPE_REGEX = /[^!$%&'*+\-.^_`|~\w]/g;
+      const UA_VALUE_ESCAPE_REGEX = /[^!$%&'*+\-.^_`|~\w#]/g;
       const UA_ESCAPE_CHAR = "-";
 
       const BYTE_LIMIT = 1024;
@@ -28963,7 +28801,7 @@ More information can be found at: https://a.co/74kJMmI`);
             options?.customUserAgent?.map(escapeUserAgent) || [];
           const appId = await options.userAgentAppId();
           if (appId) {
-            defaultUserAgent.push(escapeUserAgent([`app/${appId}`]));
+            defaultUserAgent.push(escapeUserAgent([`app`, `${appId}`]));
           }
           const prefix = utilEndpoints.getUserAgentPrefix();
           const sdkUserAgentValue = (prefix ? [prefix] : [])
@@ -29043,543 +28881,6 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
-    /***/ 8530: /***/ (__unused_webpack_module, exports) => {
-      "use strict";
-
-      const getAwsRegionExtensionConfiguration = (runtimeConfig) => {
-        return {
-          setRegion(region) {
-            runtimeConfig.region = region;
-          },
-          region() {
-            return runtimeConfig.region;
-          },
-        };
-      };
-      const resolveAwsRegionExtensionConfiguration = (
-        awsRegionExtensionConfiguration,
-      ) => {
-        return {
-          region: awsRegionExtensionConfiguration.region(),
-        };
-      };
-
-      const REGION_ENV_NAME = "AWS_REGION";
-      const REGION_INI_NAME = "region";
-      const NODE_REGION_CONFIG_OPTIONS = {
-        environmentVariableSelector: (env) => env[REGION_ENV_NAME],
-        configFileSelector: (profile) => profile[REGION_INI_NAME],
-        default: () => {
-          throw new Error("Region is missing");
-        },
-      };
-      const NODE_REGION_CONFIG_FILE_OPTIONS = {
-        preferredFile: "credentials",
-      };
-
-      const isFipsRegion = (region) =>
-        typeof region === "string" &&
-        (region.startsWith("fips-") || region.endsWith("-fips"));
-
-      const getRealRegion = (region) =>
-        isFipsRegion(region)
-          ? ["fips-aws-global", "aws-fips"].includes(region)
-            ? "us-east-1"
-            : region.replace(/fips-(dkr-|prod-)?|-fips/, "")
-          : region;
-
-      const resolveRegionConfig = (input) => {
-        const { region, useFipsEndpoint } = input;
-        if (!region) {
-          throw new Error("Region is missing");
-        }
-        return Object.assign(input, {
-          region: async () => {
-            if (typeof region === "string") {
-              return getRealRegion(region);
-            }
-            const providedRegion = await region();
-            return getRealRegion(providedRegion);
-          },
-          useFipsEndpoint: async () => {
-            const providedRegion =
-              typeof region === "string" ? region : await region();
-            if (isFipsRegion(providedRegion)) {
-              return true;
-            }
-            return typeof useFipsEndpoint !== "function"
-              ? Promise.resolve(!!useFipsEndpoint)
-              : useFipsEndpoint();
-          },
-        });
-      };
-
-      exports.NODE_REGION_CONFIG_FILE_OPTIONS = NODE_REGION_CONFIG_FILE_OPTIONS;
-      exports.NODE_REGION_CONFIG_OPTIONS = NODE_REGION_CONFIG_OPTIONS;
-      exports.REGION_ENV_NAME = REGION_ENV_NAME;
-      exports.REGION_INI_NAME = REGION_INI_NAME;
-      exports.getAwsRegionExtensionConfiguration =
-        getAwsRegionExtensionConfiguration;
-      exports.resolveAwsRegionExtensionConfiguration =
-        resolveAwsRegionExtensionConfiguration;
-      exports.resolveRegionConfig = resolveRegionConfig;
-
-      /***/
-    },
-
-    /***/ 2217: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var utilEndpoints = __nccwpck_require__(9674);
-      var urlParser = __nccwpck_require__(4494);
-
-      const isVirtualHostableS3Bucket = (value, allowSubDomains = false) => {
-        if (allowSubDomains) {
-          for (const label of value.split(".")) {
-            if (!isVirtualHostableS3Bucket(label)) {
-              return false;
-            }
-          }
-          return true;
-        }
-        if (!utilEndpoints.isValidHostLabel(value)) {
-          return false;
-        }
-        if (value.length < 3 || value.length > 63) {
-          return false;
-        }
-        if (value !== value.toLowerCase()) {
-          return false;
-        }
-        if (utilEndpoints.isIpAddress(value)) {
-          return false;
-        }
-        return true;
-      };
-
-      const ARN_DELIMITER = ":";
-      const RESOURCE_DELIMITER = "/";
-      const parseArn = (value) => {
-        const segments = value.split(ARN_DELIMITER);
-        if (segments.length < 6) return null;
-        const [arn, partition, service, region, accountId, ...resourcePath] =
-          segments;
-        if (
-          arn !== "arn" ||
-          partition === "" ||
-          service === "" ||
-          resourcePath.join(ARN_DELIMITER) === ""
-        )
-          return null;
-        const resourceId = resourcePath
-          .map((resource) => resource.split(RESOURCE_DELIMITER))
-          .flat();
-        return {
-          partition,
-          service,
-          region,
-          accountId,
-          resourceId,
-        };
-      };
-
-      var partitions = [
-        {
-          id: "aws",
-          outputs: {
-            dnsSuffix: "amazonaws.com",
-            dualStackDnsSuffix: "api.aws",
-            implicitGlobalRegion: "us-east-1",
-            name: "aws",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^(us|eu|ap|sa|ca|me|af|il|mx)\\-\\w+\\-\\d+$",
-          regions: {
-            "af-south-1": {
-              description: "Africa (Cape Town)",
-            },
-            "ap-east-1": {
-              description: "Asia Pacific (Hong Kong)",
-            },
-            "ap-east-2": {
-              description: "Asia Pacific (Taipei)",
-            },
-            "ap-northeast-1": {
-              description: "Asia Pacific (Tokyo)",
-            },
-            "ap-northeast-2": {
-              description: "Asia Pacific (Seoul)",
-            },
-            "ap-northeast-3": {
-              description: "Asia Pacific (Osaka)",
-            },
-            "ap-south-1": {
-              description: "Asia Pacific (Mumbai)",
-            },
-            "ap-south-2": {
-              description: "Asia Pacific (Hyderabad)",
-            },
-            "ap-southeast-1": {
-              description: "Asia Pacific (Singapore)",
-            },
-            "ap-southeast-2": {
-              description: "Asia Pacific (Sydney)",
-            },
-            "ap-southeast-3": {
-              description: "Asia Pacific (Jakarta)",
-            },
-            "ap-southeast-4": {
-              description: "Asia Pacific (Melbourne)",
-            },
-            "ap-southeast-5": {
-              description: "Asia Pacific (Malaysia)",
-            },
-            "ap-southeast-6": {
-              description: "Asia Pacific (New Zealand)",
-            },
-            "ap-southeast-7": {
-              description: "Asia Pacific (Thailand)",
-            },
-            "aws-global": {
-              description: "aws global region",
-            },
-            "ca-central-1": {
-              description: "Canada (Central)",
-            },
-            "ca-west-1": {
-              description: "Canada West (Calgary)",
-            },
-            "eu-central-1": {
-              description: "Europe (Frankfurt)",
-            },
-            "eu-central-2": {
-              description: "Europe (Zurich)",
-            },
-            "eu-north-1": {
-              description: "Europe (Stockholm)",
-            },
-            "eu-south-1": {
-              description: "Europe (Milan)",
-            },
-            "eu-south-2": {
-              description: "Europe (Spain)",
-            },
-            "eu-west-1": {
-              description: "Europe (Ireland)",
-            },
-            "eu-west-2": {
-              description: "Europe (London)",
-            },
-            "eu-west-3": {
-              description: "Europe (Paris)",
-            },
-            "il-central-1": {
-              description: "Israel (Tel Aviv)",
-            },
-            "me-central-1": {
-              description: "Middle East (UAE)",
-            },
-            "me-south-1": {
-              description: "Middle East (Bahrain)",
-            },
-            "mx-central-1": {
-              description: "Mexico (Central)",
-            },
-            "sa-east-1": {
-              description: "South America (Sao Paulo)",
-            },
-            "us-east-1": {
-              description: "US East (N. Virginia)",
-            },
-            "us-east-2": {
-              description: "US East (Ohio)",
-            },
-            "us-west-1": {
-              description: "US West (N. California)",
-            },
-            "us-west-2": {
-              description: "US West (Oregon)",
-            },
-          },
-        },
-        {
-          id: "aws-cn",
-          outputs: {
-            dnsSuffix: "amazonaws.com.cn",
-            dualStackDnsSuffix: "api.amazonwebservices.com.cn",
-            implicitGlobalRegion: "cn-northwest-1",
-            name: "aws-cn",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^cn\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-cn-global": {
-              description: "aws-cn global region",
-            },
-            "cn-north-1": {
-              description: "China (Beijing)",
-            },
-            "cn-northwest-1": {
-              description: "China (Ningxia)",
-            },
-          },
-        },
-        {
-          id: "aws-eusc",
-          outputs: {
-            dnsSuffix: "amazonaws.eu",
-            dualStackDnsSuffix: "api.amazonwebservices.eu",
-            implicitGlobalRegion: "eusc-de-east-1",
-            name: "aws-eusc",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
-          regions: {
-            "eusc-de-east-1": {
-              description: "EU (Germany)",
-            },
-          },
-        },
-        {
-          id: "aws-iso",
-          outputs: {
-            dnsSuffix: "c2s.ic.gov",
-            dualStackDnsSuffix: "api.aws.ic.gov",
-            implicitGlobalRegion: "us-iso-east-1",
-            name: "aws-iso",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-global": {
-              description: "aws-iso global region",
-            },
-            "us-iso-east-1": {
-              description: "US ISO East",
-            },
-            "us-iso-west-1": {
-              description: "US ISO WEST",
-            },
-          },
-        },
-        {
-          id: "aws-iso-b",
-          outputs: {
-            dnsSuffix: "sc2s.sgov.gov",
-            dualStackDnsSuffix: "api.aws.scloud",
-            implicitGlobalRegion: "us-isob-east-1",
-            name: "aws-iso-b",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-b-global": {
-              description: "aws-iso-b global region",
-            },
-            "us-isob-east-1": {
-              description: "US ISOB East (Ohio)",
-            },
-          },
-        },
-        {
-          id: "aws-iso-e",
-          outputs: {
-            dnsSuffix: "cloud.adc-e.uk",
-            dualStackDnsSuffix: "api.cloud-aws.adc-e.uk",
-            implicitGlobalRegion: "eu-isoe-west-1",
-            name: "aws-iso-e",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-e-global": {
-              description: "aws-iso-e global region",
-            },
-            "eu-isoe-west-1": {
-              description: "EU ISOE West",
-            },
-          },
-        },
-        {
-          id: "aws-iso-f",
-          outputs: {
-            dnsSuffix: "csp.hci.ic.gov",
-            dualStackDnsSuffix: "api.aws.hci.ic.gov",
-            implicitGlobalRegion: "us-isof-south-1",
-            name: "aws-iso-f",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-f-global": {
-              description: "aws-iso-f global region",
-            },
-            "us-isof-east-1": {
-              description: "US ISOF EAST",
-            },
-            "us-isof-south-1": {
-              description: "US ISOF SOUTH",
-            },
-          },
-        },
-        {
-          id: "aws-us-gov",
-          outputs: {
-            dnsSuffix: "amazonaws.com",
-            dualStackDnsSuffix: "api.aws",
-            implicitGlobalRegion: "us-gov-west-1",
-            name: "aws-us-gov",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-gov\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-us-gov-global": {
-              description: "aws-us-gov global region",
-            },
-            "us-gov-east-1": {
-              description: "AWS GovCloud (US-East)",
-            },
-            "us-gov-west-1": {
-              description: "AWS GovCloud (US-West)",
-            },
-          },
-        },
-      ];
-      var version = "1.1";
-      var partitionsInfo = {
-        partitions: partitions,
-        version: version,
-      };
-
-      let selectedPartitionsInfo = partitionsInfo;
-      let selectedUserAgentPrefix = "";
-      const partition = (value) => {
-        const { partitions } = selectedPartitionsInfo;
-        for (const partition of partitions) {
-          const { regions, outputs } = partition;
-          for (const [region, regionData] of Object.entries(regions)) {
-            if (region === value) {
-              return {
-                ...outputs,
-                ...regionData,
-              };
-            }
-          }
-        }
-        for (const partition of partitions) {
-          const { regionRegex, outputs } = partition;
-          if (new RegExp(regionRegex).test(value)) {
-            return {
-              ...outputs,
-            };
-          }
-        }
-        const DEFAULT_PARTITION = partitions.find(
-          (partition) => partition.id === "aws",
-        );
-        if (!DEFAULT_PARTITION) {
-          throw new Error(
-            "Provided region was not found in the partition array or regex," +
-              " and default partition with id 'aws' doesn't exist.",
-          );
-        }
-        return {
-          ...DEFAULT_PARTITION.outputs,
-        };
-      };
-      const setPartitionInfo = (partitionsInfo, userAgentPrefix = "") => {
-        selectedPartitionsInfo = partitionsInfo;
-        selectedUserAgentPrefix = userAgentPrefix;
-      };
-      const useDefaultPartitionInfo = () => {
-        setPartitionInfo(partitionsInfo, "");
-      };
-      const getUserAgentPrefix = () => selectedUserAgentPrefix;
-
-      const awsEndpointFunctions = {
-        isVirtualHostableS3Bucket: isVirtualHostableS3Bucket,
-        parseArn: parseArn,
-        partition: partition,
-      };
-      utilEndpoints.customEndpointFunctions.aws = awsEndpointFunctions;
-
-      const resolveDefaultAwsRegionalEndpointsConfig = (input) => {
-        if (typeof input.endpointProvider !== "function") {
-          throw new Error(
-            "@aws-sdk/util-endpoint - endpointProvider and endpoint missing in config for this client.",
-          );
-        }
-        const { endpoint } = input;
-        if (endpoint === undefined) {
-          input.endpoint = async () => {
-            return toEndpointV1(
-              input.endpointProvider(
-                {
-                  Region:
-                    typeof input.region === "function"
-                      ? await input.region()
-                      : input.region,
-                  UseDualStack:
-                    typeof input.useDualstackEndpoint === "function"
-                      ? await input.useDualstackEndpoint()
-                      : input.useDualstackEndpoint,
-                  UseFIPS:
-                    typeof input.useFipsEndpoint === "function"
-                      ? await input.useFipsEndpoint()
-                      : input.useFipsEndpoint,
-                  Endpoint: undefined,
-                },
-                { logger: input.logger },
-              ),
-            );
-          };
-        }
-        return input;
-      };
-      const toEndpointV1 = (endpoint) => urlParser.parseUrl(endpoint.url);
-
-      Object.defineProperty(exports, "EndpointError", {
-        enumerable: true,
-        get: function () {
-          return utilEndpoints.EndpointError;
-        },
-      });
-      Object.defineProperty(exports, "isIpAddress", {
-        enumerable: true,
-        get: function () {
-          return utilEndpoints.isIpAddress;
-        },
-      });
-      Object.defineProperty(exports, "resolveEndpoint", {
-        enumerable: true,
-        get: function () {
-          return utilEndpoints.resolveEndpoint;
-        },
-      });
-      exports.awsEndpointFunctions = awsEndpointFunctions;
-      exports.getUserAgentPrefix = getUserAgentPrefix;
-      exports.partition = partition;
-      exports.resolveDefaultAwsRegionalEndpointsConfig =
-        resolveDefaultAwsRegionalEndpointsConfig;
-      exports.setPartitionInfo = setPartitionInfo;
-      exports.toEndpointV1 = toEndpointV1;
-      exports.useDefaultPartitionInfo = useDefaultPartitionInfo;
-
-      /***/
-    },
-
     /***/ 7437: /***/ (
       __unused_webpack_module,
       exports,
@@ -29646,176 +28947,6 @@ More information can be found at: https://a.co/74kJMmI`);
       exports.createDefaultUserAgentProvider = createDefaultUserAgentProvider;
       exports.crtAvailability = crtAvailability;
       exports.defaultUserAgent = defaultUserAgent;
-
-      /***/
-    },
-
-    /***/ 2561: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var xmlParser = __nccwpck_require__(2778);
-
-      function escapeAttribute(value) {
-        return value
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      function escapeElement(value) {
-        return value
-          .replace(/&/g, "&amp;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&apos;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/\r/g, "&#x0D;")
-          .replace(/\n/g, "&#x0A;")
-          .replace(/\u0085/g, "&#x85;")
-          .replace(/\u2028/, "&#x2028;");
-      }
-
-      class XmlText {
-        value;
-        constructor(value) {
-          this.value = value;
-        }
-        toString() {
-          return escapeElement("" + this.value);
-        }
-      }
-
-      class XmlNode {
-        name;
-        children;
-        attributes = {};
-        static of(name, childText, withName) {
-          const node = new XmlNode(name);
-          if (childText !== undefined) {
-            node.addChildNode(new XmlText(childText));
-          }
-          if (withName !== undefined) {
-            node.withName(withName);
-          }
-          return node;
-        }
-        constructor(name, children = []) {
-          this.name = name;
-          this.children = children;
-        }
-        withName(name) {
-          this.name = name;
-          return this;
-        }
-        addAttribute(name, value) {
-          this.attributes[name] = value;
-          return this;
-        }
-        addChildNode(child) {
-          this.children.push(child);
-          return this;
-        }
-        removeAttribute(name) {
-          delete this.attributes[name];
-          return this;
-        }
-        n(name) {
-          this.name = name;
-          return this;
-        }
-        c(child) {
-          this.children.push(child);
-          return this;
-        }
-        a(name, value) {
-          if (value != null) {
-            this.attributes[name] = value;
-          }
-          return this;
-        }
-        cc(input, field, withName = field) {
-          if (input[field] != null) {
-            const node = XmlNode.of(field, input[field]).withName(withName);
-            this.c(node);
-          }
-        }
-        l(input, listName, memberName, valueProvider) {
-          if (input[listName] != null) {
-            const nodes = valueProvider();
-            nodes.map((node) => {
-              node.withName(memberName);
-              this.c(node);
-            });
-          }
-        }
-        lc(input, listName, memberName, valueProvider) {
-          if (input[listName] != null) {
-            const nodes = valueProvider();
-            const containerNode = new XmlNode(memberName);
-            nodes.map((node) => {
-              containerNode.c(node);
-            });
-            this.c(containerNode);
-          }
-        }
-        toString() {
-          const hasChildren = Boolean(this.children.length);
-          let xmlText = `<${this.name}`;
-          const attributes = this.attributes;
-          for (const attributeName of Object.keys(attributes)) {
-            const attribute = attributes[attributeName];
-            if (attribute != null) {
-              xmlText += ` ${attributeName}="${escapeAttribute("" + attribute)}"`;
-            }
-          }
-          return (xmlText += !hasChildren
-            ? "/>"
-            : `>${this.children.map((c) => c.toString()).join("")}</${this.name}>`);
-        }
-      }
-
-      Object.defineProperty(exports, "parseXML", {
-        enumerable: true,
-        get: function () {
-          return xmlParser.parseXML;
-        },
-      });
-      exports.XmlNode = XmlNode;
-      exports.XmlText = XmlText;
-
-      /***/
-    },
-
-    /***/ 2778: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.parseXML = parseXML;
-      const fast_xml_parser_1 = __nccwpck_require__(591);
-      const parser = new fast_xml_parser_1.XMLParser({
-        attributeNamePrefix: "",
-        htmlEntities: true,
-        ignoreAttributes: false,
-        ignoreDeclaration: true,
-        parseTagValue: false,
-        trimValues: false,
-        tagValueProcessor: (_, val) =>
-          val.trim() === "" && val.includes("\n") ? "" : undefined,
-      });
-      parser.addEntity("#xD", "\r");
-      parser.addEntity("#10", "\n");
-      function parseXML(xmlString) {
-        return parser.parse(xmlString, true);
-      }
 
       /***/
     },
@@ -29902,7 +29033,7 @@ More information can be found at: https://a.co/74kJMmI`);
 
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.defaultEndpointResolver = void 0;
-      const util_endpoints_1 = __nccwpck_require__(5399);
+      const util_endpoints_1 = __nccwpck_require__(3068);
       const util_endpoints_2 = __nccwpck_require__(9674);
       const ruleset_1 = __nccwpck_require__(5211);
       const cache = new util_endpoints_2.EndpointCache({
@@ -29940,8 +29071,8 @@ More information can be found at: https://a.co/74kJMmI`);
         e = "endpoint",
         f = "tree",
         g = "PartitionResult",
-        h = { [s]: false, type: "String" },
-        i = { [s]: true, default: false, type: "Boolean" },
+        h = { [s]: false, type: "string" },
+        i = { [s]: true, default: false, type: "boolean" },
         j = { [v]: "Endpoint" },
         k = { [t]: c, [u]: [{ [v]: "UseFIPS" }, true] },
         l = { [t]: c, [u]: [{ [v]: "UseDualStack" }, true] },
@@ -30091,9 +29222,9 @@ More information can be found at: https://a.co/74kJMmI`);
       "use strict";
       var __webpack_unused_export__;
 
-      var middlewareHostHeader = __nccwpck_require__(2853);
-      var middlewareLogger = __nccwpck_require__(239);
-      var middlewareRecursionDetection = __nccwpck_require__(4779);
+      var middlewareHostHeader = __nccwpck_require__(2590);
+      var middlewareLogger = __nccwpck_require__(5242);
+      var middlewareRecursionDetection = __nccwpck_require__(1568);
       var middlewareUserAgent = __nccwpck_require__(2959);
       var configResolver = __nccwpck_require__(9316);
       var core = __nccwpck_require__(402);
@@ -30103,7 +29234,7 @@ More information can be found at: https://a.co/74kJMmI`);
       var smithyClient = __nccwpck_require__(1411);
       var httpAuthSchemeProvider = __nccwpck_require__(7404);
       var runtimeConfig = __nccwpck_require__(2981);
-      var regionConfigResolver = __nccwpck_require__(3336);
+      var regionConfigResolver = __nccwpck_require__(6463);
       var protocolHttp = __nccwpck_require__(2356);
       var middlewareSerde = __nccwpck_require__(3255);
       var core$1 = __nccwpck_require__(8704);
@@ -31084,757 +30215,6 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
-    /***/ 2853: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var protocolHttp = __nccwpck_require__(2356);
-
-      function resolveHostHeaderConfig(input) {
-        return input;
-      }
-      const hostHeaderMiddleware = (options) => (next) => async (args) => {
-        if (!protocolHttp.HttpRequest.isInstance(args.request))
-          return next(args);
-        const { request } = args;
-        const { handlerProtocol = "" } = options.requestHandler.metadata || {};
-        if (
-          handlerProtocol.indexOf("h2") >= 0 &&
-          !request.headers[":authority"]
-        ) {
-          delete request.headers["host"];
-          request.headers[":authority"] =
-            request.hostname + (request.port ? ":" + request.port : "");
-        } else if (!request.headers["host"]) {
-          let host = request.hostname;
-          if (request.port != null) host += `:${request.port}`;
-          request.headers["host"] = host;
-        }
-        return next(args);
-      };
-      const hostHeaderMiddlewareOptions = {
-        name: "hostHeaderMiddleware",
-        step: "build",
-        priority: "low",
-        tags: ["HOST"],
-        override: true,
-      };
-      const getHostHeaderPlugin = (options) => ({
-        applyToStack: (clientStack) => {
-          clientStack.add(
-            hostHeaderMiddleware(options),
-            hostHeaderMiddlewareOptions,
-          );
-        },
-      });
-
-      exports.getHostHeaderPlugin = getHostHeaderPlugin;
-      exports.hostHeaderMiddleware = hostHeaderMiddleware;
-      exports.hostHeaderMiddlewareOptions = hostHeaderMiddlewareOptions;
-      exports.resolveHostHeaderConfig = resolveHostHeaderConfig;
-
-      /***/
-    },
-
-    /***/ 239: /***/ (__unused_webpack_module, exports) => {
-      "use strict";
-
-      const loggerMiddleware = () => (next, context) => async (args) => {
-        try {
-          const response = await next(args);
-          const {
-            clientName,
-            commandName,
-            logger,
-            dynamoDbDocumentClientOptions = {},
-          } = context;
-          const {
-            overrideInputFilterSensitiveLog,
-            overrideOutputFilterSensitiveLog,
-          } = dynamoDbDocumentClientOptions;
-          const inputFilterSensitiveLog =
-            overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
-          const outputFilterSensitiveLog =
-            overrideOutputFilterSensitiveLog ??
-            context.outputFilterSensitiveLog;
-          const { $metadata, ...outputWithoutMetadata } = response.output;
-          logger?.info?.({
-            clientName,
-            commandName,
-            input: inputFilterSensitiveLog(args.input),
-            output: outputFilterSensitiveLog(outputWithoutMetadata),
-            metadata: $metadata,
-          });
-          return response;
-        } catch (error) {
-          const {
-            clientName,
-            commandName,
-            logger,
-            dynamoDbDocumentClientOptions = {},
-          } = context;
-          const { overrideInputFilterSensitiveLog } =
-            dynamoDbDocumentClientOptions;
-          const inputFilterSensitiveLog =
-            overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
-          logger?.error?.({
-            clientName,
-            commandName,
-            input: inputFilterSensitiveLog(args.input),
-            error,
-            metadata: error.$metadata,
-          });
-          throw error;
-        }
-      };
-      const loggerMiddlewareOptions = {
-        name: "loggerMiddleware",
-        tags: ["LOGGER"],
-        step: "initialize",
-        override: true,
-      };
-      const getLoggerPlugin = (options) => ({
-        applyToStack: (clientStack) => {
-          clientStack.add(loggerMiddleware(), loggerMiddlewareOptions);
-        },
-      });
-
-      exports.getLoggerPlugin = getLoggerPlugin;
-      exports.loggerMiddleware = loggerMiddleware;
-      exports.loggerMiddlewareOptions = loggerMiddlewareOptions;
-
-      /***/
-    },
-
-    /***/ 4779: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var recursionDetectionMiddleware = __nccwpck_require__(920);
-
-      const recursionDetectionMiddlewareOptions = {
-        step: "build",
-        tags: ["RECURSION_DETECTION"],
-        name: "recursionDetectionMiddleware",
-        override: true,
-        priority: "low",
-      };
-
-      const getRecursionDetectionPlugin = (options) => ({
-        applyToStack: (clientStack) => {
-          clientStack.add(
-            recursionDetectionMiddleware.recursionDetectionMiddleware(),
-            recursionDetectionMiddlewareOptions,
-          );
-        },
-      });
-
-      exports.getRecursionDetectionPlugin = getRecursionDetectionPlugin;
-      Object.keys(recursionDetectionMiddleware).forEach(function (k) {
-        if (
-          k !== "default" &&
-          !Object.prototype.hasOwnProperty.call(exports, k)
-        )
-          Object.defineProperty(exports, k, {
-            enumerable: true,
-            get: function () {
-              return recursionDetectionMiddleware[k];
-            },
-          });
-      });
-
-      /***/
-    },
-
-    /***/ 920: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.recursionDetectionMiddleware = void 0;
-      const lambda_invoke_store_1 = __nccwpck_require__(7453);
-      const protocol_http_1 = __nccwpck_require__(2356);
-      const TRACE_ID_HEADER_NAME = "X-Amzn-Trace-Id";
-      const ENV_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME";
-      const ENV_TRACE_ID = "_X_AMZN_TRACE_ID";
-      const recursionDetectionMiddleware = () => (next) => async (args) => {
-        const { request } = args;
-        if (!protocol_http_1.HttpRequest.isInstance(request)) {
-          return next(args);
-        }
-        const traceIdHeader =
-          Object.keys(request.headers ?? {}).find(
-            (h) => h.toLowerCase() === TRACE_ID_HEADER_NAME.toLowerCase(),
-          ) ?? TRACE_ID_HEADER_NAME;
-        if (request.headers.hasOwnProperty(traceIdHeader)) {
-          return next(args);
-        }
-        const functionName = process.env[ENV_LAMBDA_FUNCTION_NAME];
-        const traceIdFromEnv = process.env[ENV_TRACE_ID];
-        const traceIdFromInvokeStore =
-          lambda_invoke_store_1.InvokeStore.getXRayTraceId();
-        const traceId = traceIdFromInvokeStore ?? traceIdFromEnv;
-        const nonEmptyString = (str) =>
-          typeof str === "string" && str.length > 0;
-        if (nonEmptyString(functionName) && nonEmptyString(traceId)) {
-          request.headers[TRACE_ID_HEADER_NAME] = traceId;
-        }
-        return next({
-          ...args,
-          request,
-        });
-      };
-      exports.recursionDetectionMiddleware = recursionDetectionMiddleware;
-
-      /***/
-    },
-
-    /***/ 3336: /***/ (__unused_webpack_module, exports) => {
-      "use strict";
-
-      const getAwsRegionExtensionConfiguration = (runtimeConfig) => {
-        return {
-          setRegion(region) {
-            runtimeConfig.region = region;
-          },
-          region() {
-            return runtimeConfig.region;
-          },
-        };
-      };
-      const resolveAwsRegionExtensionConfiguration = (
-        awsRegionExtensionConfiguration,
-      ) => {
-        return {
-          region: awsRegionExtensionConfiguration.region(),
-        };
-      };
-
-      const REGION_ENV_NAME = "AWS_REGION";
-      const REGION_INI_NAME = "region";
-      const NODE_REGION_CONFIG_OPTIONS = {
-        environmentVariableSelector: (env) => env[REGION_ENV_NAME],
-        configFileSelector: (profile) => profile[REGION_INI_NAME],
-        default: () => {
-          throw new Error("Region is missing");
-        },
-      };
-      const NODE_REGION_CONFIG_FILE_OPTIONS = {
-        preferredFile: "credentials",
-      };
-
-      const isFipsRegion = (region) =>
-        typeof region === "string" &&
-        (region.startsWith("fips-") || region.endsWith("-fips"));
-
-      const getRealRegion = (region) =>
-        isFipsRegion(region)
-          ? ["fips-aws-global", "aws-fips"].includes(region)
-            ? "us-east-1"
-            : region.replace(/fips-(dkr-|prod-)?|-fips/, "")
-          : region;
-
-      const resolveRegionConfig = (input) => {
-        const { region, useFipsEndpoint } = input;
-        if (!region) {
-          throw new Error("Region is missing");
-        }
-        return Object.assign(input, {
-          region: async () => {
-            if (typeof region === "string") {
-              return getRealRegion(region);
-            }
-            const providedRegion = await region();
-            return getRealRegion(providedRegion);
-          },
-          useFipsEndpoint: async () => {
-            const providedRegion =
-              typeof region === "string" ? region : await region();
-            if (isFipsRegion(providedRegion)) {
-              return true;
-            }
-            return typeof useFipsEndpoint !== "function"
-              ? Promise.resolve(!!useFipsEndpoint)
-              : useFipsEndpoint();
-          },
-        });
-      };
-
-      exports.NODE_REGION_CONFIG_FILE_OPTIONS = NODE_REGION_CONFIG_FILE_OPTIONS;
-      exports.NODE_REGION_CONFIG_OPTIONS = NODE_REGION_CONFIG_OPTIONS;
-      exports.REGION_ENV_NAME = REGION_ENV_NAME;
-      exports.REGION_INI_NAME = REGION_INI_NAME;
-      exports.getAwsRegionExtensionConfiguration =
-        getAwsRegionExtensionConfiguration;
-      exports.resolveAwsRegionExtensionConfiguration =
-        resolveAwsRegionExtensionConfiguration;
-      exports.resolveRegionConfig = resolveRegionConfig;
-
-      /***/
-    },
-
-    /***/ 5399: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var utilEndpoints = __nccwpck_require__(9674);
-      var urlParser = __nccwpck_require__(4494);
-
-      const isVirtualHostableS3Bucket = (value, allowSubDomains = false) => {
-        if (allowSubDomains) {
-          for (const label of value.split(".")) {
-            if (!isVirtualHostableS3Bucket(label)) {
-              return false;
-            }
-          }
-          return true;
-        }
-        if (!utilEndpoints.isValidHostLabel(value)) {
-          return false;
-        }
-        if (value.length < 3 || value.length > 63) {
-          return false;
-        }
-        if (value !== value.toLowerCase()) {
-          return false;
-        }
-        if (utilEndpoints.isIpAddress(value)) {
-          return false;
-        }
-        return true;
-      };
-
-      const ARN_DELIMITER = ":";
-      const RESOURCE_DELIMITER = "/";
-      const parseArn = (value) => {
-        const segments = value.split(ARN_DELIMITER);
-        if (segments.length < 6) return null;
-        const [arn, partition, service, region, accountId, ...resourcePath] =
-          segments;
-        if (
-          arn !== "arn" ||
-          partition === "" ||
-          service === "" ||
-          resourcePath.join(ARN_DELIMITER) === ""
-        )
-          return null;
-        const resourceId = resourcePath
-          .map((resource) => resource.split(RESOURCE_DELIMITER))
-          .flat();
-        return {
-          partition,
-          service,
-          region,
-          accountId,
-          resourceId,
-        };
-      };
-
-      var partitions = [
-        {
-          id: "aws",
-          outputs: {
-            dnsSuffix: "amazonaws.com",
-            dualStackDnsSuffix: "api.aws",
-            implicitGlobalRegion: "us-east-1",
-            name: "aws",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^(us|eu|ap|sa|ca|me|af|il|mx)\\-\\w+\\-\\d+$",
-          regions: {
-            "af-south-1": {
-              description: "Africa (Cape Town)",
-            },
-            "ap-east-1": {
-              description: "Asia Pacific (Hong Kong)",
-            },
-            "ap-east-2": {
-              description: "Asia Pacific (Taipei)",
-            },
-            "ap-northeast-1": {
-              description: "Asia Pacific (Tokyo)",
-            },
-            "ap-northeast-2": {
-              description: "Asia Pacific (Seoul)",
-            },
-            "ap-northeast-3": {
-              description: "Asia Pacific (Osaka)",
-            },
-            "ap-south-1": {
-              description: "Asia Pacific (Mumbai)",
-            },
-            "ap-south-2": {
-              description: "Asia Pacific (Hyderabad)",
-            },
-            "ap-southeast-1": {
-              description: "Asia Pacific (Singapore)",
-            },
-            "ap-southeast-2": {
-              description: "Asia Pacific (Sydney)",
-            },
-            "ap-southeast-3": {
-              description: "Asia Pacific (Jakarta)",
-            },
-            "ap-southeast-4": {
-              description: "Asia Pacific (Melbourne)",
-            },
-            "ap-southeast-5": {
-              description: "Asia Pacific (Malaysia)",
-            },
-            "ap-southeast-6": {
-              description: "Asia Pacific (New Zealand)",
-            },
-            "ap-southeast-7": {
-              description: "Asia Pacific (Thailand)",
-            },
-            "aws-global": {
-              description: "aws global region",
-            },
-            "ca-central-1": {
-              description: "Canada (Central)",
-            },
-            "ca-west-1": {
-              description: "Canada West (Calgary)",
-            },
-            "eu-central-1": {
-              description: "Europe (Frankfurt)",
-            },
-            "eu-central-2": {
-              description: "Europe (Zurich)",
-            },
-            "eu-north-1": {
-              description: "Europe (Stockholm)",
-            },
-            "eu-south-1": {
-              description: "Europe (Milan)",
-            },
-            "eu-south-2": {
-              description: "Europe (Spain)",
-            },
-            "eu-west-1": {
-              description: "Europe (Ireland)",
-            },
-            "eu-west-2": {
-              description: "Europe (London)",
-            },
-            "eu-west-3": {
-              description: "Europe (Paris)",
-            },
-            "il-central-1": {
-              description: "Israel (Tel Aviv)",
-            },
-            "me-central-1": {
-              description: "Middle East (UAE)",
-            },
-            "me-south-1": {
-              description: "Middle East (Bahrain)",
-            },
-            "mx-central-1": {
-              description: "Mexico (Central)",
-            },
-            "sa-east-1": {
-              description: "South America (Sao Paulo)",
-            },
-            "us-east-1": {
-              description: "US East (N. Virginia)",
-            },
-            "us-east-2": {
-              description: "US East (Ohio)",
-            },
-            "us-west-1": {
-              description: "US West (N. California)",
-            },
-            "us-west-2": {
-              description: "US West (Oregon)",
-            },
-          },
-        },
-        {
-          id: "aws-cn",
-          outputs: {
-            dnsSuffix: "amazonaws.com.cn",
-            dualStackDnsSuffix: "api.amazonwebservices.com.cn",
-            implicitGlobalRegion: "cn-northwest-1",
-            name: "aws-cn",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^cn\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-cn-global": {
-              description: "aws-cn global region",
-            },
-            "cn-north-1": {
-              description: "China (Beijing)",
-            },
-            "cn-northwest-1": {
-              description: "China (Ningxia)",
-            },
-          },
-        },
-        {
-          id: "aws-eusc",
-          outputs: {
-            dnsSuffix: "amazonaws.eu",
-            dualStackDnsSuffix: "api.amazonwebservices.eu",
-            implicitGlobalRegion: "eusc-de-east-1",
-            name: "aws-eusc",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
-          regions: {
-            "eusc-de-east-1": {
-              description: "EU (Germany)",
-            },
-          },
-        },
-        {
-          id: "aws-iso",
-          outputs: {
-            dnsSuffix: "c2s.ic.gov",
-            dualStackDnsSuffix: "api.aws.ic.gov",
-            implicitGlobalRegion: "us-iso-east-1",
-            name: "aws-iso",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-global": {
-              description: "aws-iso global region",
-            },
-            "us-iso-east-1": {
-              description: "US ISO East",
-            },
-            "us-iso-west-1": {
-              description: "US ISO WEST",
-            },
-          },
-        },
-        {
-          id: "aws-iso-b",
-          outputs: {
-            dnsSuffix: "sc2s.sgov.gov",
-            dualStackDnsSuffix: "api.aws.scloud",
-            implicitGlobalRegion: "us-isob-east-1",
-            name: "aws-iso-b",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-b-global": {
-              description: "aws-iso-b global region",
-            },
-            "us-isob-east-1": {
-              description: "US ISOB East (Ohio)",
-            },
-          },
-        },
-        {
-          id: "aws-iso-e",
-          outputs: {
-            dnsSuffix: "cloud.adc-e.uk",
-            dualStackDnsSuffix: "api.cloud-aws.adc-e.uk",
-            implicitGlobalRegion: "eu-isoe-west-1",
-            name: "aws-iso-e",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-e-global": {
-              description: "aws-iso-e global region",
-            },
-            "eu-isoe-west-1": {
-              description: "EU ISOE West",
-            },
-          },
-        },
-        {
-          id: "aws-iso-f",
-          outputs: {
-            dnsSuffix: "csp.hci.ic.gov",
-            dualStackDnsSuffix: "api.aws.hci.ic.gov",
-            implicitGlobalRegion: "us-isof-south-1",
-            name: "aws-iso-f",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-iso-f-global": {
-              description: "aws-iso-f global region",
-            },
-            "us-isof-east-1": {
-              description: "US ISOF EAST",
-            },
-            "us-isof-south-1": {
-              description: "US ISOF SOUTH",
-            },
-          },
-        },
-        {
-          id: "aws-us-gov",
-          outputs: {
-            dnsSuffix: "amazonaws.com",
-            dualStackDnsSuffix: "api.aws",
-            implicitGlobalRegion: "us-gov-west-1",
-            name: "aws-us-gov",
-            supportsDualStack: true,
-            supportsFIPS: true,
-          },
-          regionRegex: "^us\\-gov\\-\\w+\\-\\d+$",
-          regions: {
-            "aws-us-gov-global": {
-              description: "aws-us-gov global region",
-            },
-            "us-gov-east-1": {
-              description: "AWS GovCloud (US-East)",
-            },
-            "us-gov-west-1": {
-              description: "AWS GovCloud (US-West)",
-            },
-          },
-        },
-      ];
-      var version = "1.1";
-      var partitionsInfo = {
-        partitions: partitions,
-        version: version,
-      };
-
-      let selectedPartitionsInfo = partitionsInfo;
-      let selectedUserAgentPrefix = "";
-      const partition = (value) => {
-        const { partitions } = selectedPartitionsInfo;
-        for (const partition of partitions) {
-          const { regions, outputs } = partition;
-          for (const [region, regionData] of Object.entries(regions)) {
-            if (region === value) {
-              return {
-                ...outputs,
-                ...regionData,
-              };
-            }
-          }
-        }
-        for (const partition of partitions) {
-          const { regionRegex, outputs } = partition;
-          if (new RegExp(regionRegex).test(value)) {
-            return {
-              ...outputs,
-            };
-          }
-        }
-        const DEFAULT_PARTITION = partitions.find(
-          (partition) => partition.id === "aws",
-        );
-        if (!DEFAULT_PARTITION) {
-          throw new Error(
-            "Provided region was not found in the partition array or regex," +
-              " and default partition with id 'aws' doesn't exist.",
-          );
-        }
-        return {
-          ...DEFAULT_PARTITION.outputs,
-        };
-      };
-      const setPartitionInfo = (partitionsInfo, userAgentPrefix = "") => {
-        selectedPartitionsInfo = partitionsInfo;
-        selectedUserAgentPrefix = userAgentPrefix;
-      };
-      const useDefaultPartitionInfo = () => {
-        setPartitionInfo(partitionsInfo, "");
-      };
-      const getUserAgentPrefix = () => selectedUserAgentPrefix;
-
-      const awsEndpointFunctions = {
-        isVirtualHostableS3Bucket: isVirtualHostableS3Bucket,
-        parseArn: parseArn,
-        partition: partition,
-      };
-      utilEndpoints.customEndpointFunctions.aws = awsEndpointFunctions;
-
-      const resolveDefaultAwsRegionalEndpointsConfig = (input) => {
-        if (typeof input.endpointProvider !== "function") {
-          throw new Error(
-            "@aws-sdk/util-endpoint - endpointProvider and endpoint missing in config for this client.",
-          );
-        }
-        const { endpoint } = input;
-        if (endpoint === undefined) {
-          input.endpoint = async () => {
-            return toEndpointV1(
-              input.endpointProvider(
-                {
-                  Region:
-                    typeof input.region === "function"
-                      ? await input.region()
-                      : input.region,
-                  UseDualStack:
-                    typeof input.useDualstackEndpoint === "function"
-                      ? await input.useDualstackEndpoint()
-                      : input.useDualstackEndpoint,
-                  UseFIPS:
-                    typeof input.useFipsEndpoint === "function"
-                      ? await input.useFipsEndpoint()
-                      : input.useFipsEndpoint,
-                  Endpoint: undefined,
-                },
-                { logger: input.logger },
-              ),
-            );
-          };
-        }
-        return input;
-      };
-      const toEndpointV1 = (endpoint) => urlParser.parseUrl(endpoint.url);
-
-      Object.defineProperty(exports, "EndpointError", {
-        enumerable: true,
-        get: function () {
-          return utilEndpoints.EndpointError;
-        },
-      });
-      Object.defineProperty(exports, "isIpAddress", {
-        enumerable: true,
-        get: function () {
-          return utilEndpoints.isIpAddress;
-        },
-      });
-      Object.defineProperty(exports, "resolveEndpoint", {
-        enumerable: true,
-        get: function () {
-          return utilEndpoints.resolveEndpoint;
-        },
-      });
-      exports.awsEndpointFunctions = awsEndpointFunctions;
-      exports.getUserAgentPrefix = getUserAgentPrefix;
-      exports.partition = partition;
-      exports.resolveDefaultAwsRegionalEndpointsConfig =
-        resolveDefaultAwsRegionalEndpointsConfig;
-      exports.setPartitionInfo = setPartitionInfo;
-      exports.toEndpointV1 = toEndpointV1;
-      exports.useDefaultPartitionInfo = useDefaultPartitionInfo;
-
-      /***/
-    },
-
     /***/ 8704: /***/ (
       __unused_webpack_module,
       exports,
@@ -31854,7 +30234,7 @@ More information can be found at: https://a.co/74kJMmI`);
       var utilBase64 = __nccwpck_require__(8385);
       var smithyClient = __nccwpck_require__(1411);
       var utilUtf8 = __nccwpck_require__(1577);
-      var xmlBuilder = __nccwpck_require__(628);
+      var xmlBuilder = __nccwpck_require__(4274);
 
       const state = {
         warningEmitted: false,
@@ -34363,176 +32743,6 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
-    /***/ 628: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      var xmlParser = __nccwpck_require__(1261);
-
-      function escapeAttribute(value) {
-        return value
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      function escapeElement(value) {
-        return value
-          .replace(/&/g, "&amp;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&apos;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/\r/g, "&#x0D;")
-          .replace(/\n/g, "&#x0A;")
-          .replace(/\u0085/g, "&#x85;")
-          .replace(/\u2028/, "&#x2028;");
-      }
-
-      class XmlText {
-        value;
-        constructor(value) {
-          this.value = value;
-        }
-        toString() {
-          return escapeElement("" + this.value);
-        }
-      }
-
-      class XmlNode {
-        name;
-        children;
-        attributes = {};
-        static of(name, childText, withName) {
-          const node = new XmlNode(name);
-          if (childText !== undefined) {
-            node.addChildNode(new XmlText(childText));
-          }
-          if (withName !== undefined) {
-            node.withName(withName);
-          }
-          return node;
-        }
-        constructor(name, children = []) {
-          this.name = name;
-          this.children = children;
-        }
-        withName(name) {
-          this.name = name;
-          return this;
-        }
-        addAttribute(name, value) {
-          this.attributes[name] = value;
-          return this;
-        }
-        addChildNode(child) {
-          this.children.push(child);
-          return this;
-        }
-        removeAttribute(name) {
-          delete this.attributes[name];
-          return this;
-        }
-        n(name) {
-          this.name = name;
-          return this;
-        }
-        c(child) {
-          this.children.push(child);
-          return this;
-        }
-        a(name, value) {
-          if (value != null) {
-            this.attributes[name] = value;
-          }
-          return this;
-        }
-        cc(input, field, withName = field) {
-          if (input[field] != null) {
-            const node = XmlNode.of(field, input[field]).withName(withName);
-            this.c(node);
-          }
-        }
-        l(input, listName, memberName, valueProvider) {
-          if (input[listName] != null) {
-            const nodes = valueProvider();
-            nodes.map((node) => {
-              node.withName(memberName);
-              this.c(node);
-            });
-          }
-        }
-        lc(input, listName, memberName, valueProvider) {
-          if (input[listName] != null) {
-            const nodes = valueProvider();
-            const containerNode = new XmlNode(memberName);
-            nodes.map((node) => {
-              containerNode.c(node);
-            });
-            this.c(containerNode);
-          }
-        }
-        toString() {
-          const hasChildren = Boolean(this.children.length);
-          let xmlText = `<${this.name}`;
-          const attributes = this.attributes;
-          for (const attributeName of Object.keys(attributes)) {
-            const attribute = attributes[attributeName];
-            if (attribute != null) {
-              xmlText += ` ${attributeName}="${escapeAttribute("" + attribute)}"`;
-            }
-          }
-          return (xmlText += !hasChildren
-            ? "/>"
-            : `>${this.children.map((c) => c.toString()).join("")}</${this.name}>`);
-        }
-      }
-
-      Object.defineProperty(exports, "parseXML", {
-        enumerable: true,
-        get: function () {
-          return xmlParser.parseXML;
-        },
-      });
-      exports.XmlNode = XmlNode;
-      exports.XmlText = XmlText;
-
-      /***/
-    },
-
-    /***/ 1261: /***/ (
-      __unused_webpack_module,
-      exports,
-      __nccwpck_require__,
-    ) => {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.parseXML = parseXML;
-      const fast_xml_parser_1 = __nccwpck_require__(591);
-      const parser = new fast_xml_parser_1.XMLParser({
-        attributeNamePrefix: "",
-        htmlEntities: true,
-        ignoreAttributes: false,
-        ignoreDeclaration: true,
-        parseTagValue: false,
-        trimValues: false,
-        tagValueProcessor: (_, val) =>
-          val.trim() === "" && val.includes("\n") ? "" : undefined,
-      });
-      parser.addEntity("#xD", "\r");
-      parser.addEntity("#10", "\n");
-      function parseXML(xmlString) {
-        return parser.parse(xmlString, true);
-      }
-
-      /***/
-    },
-
     /***/ 5606: /***/ (
       __unused_webpack_module,
       exports,
@@ -34639,10 +32849,63 @@ More information can be found at: https://a.co/74kJMmI`);
         return fromInstanceMetadata(init);
       };
 
+      function memoizeChain(providers, treatAsExpired) {
+        const chain = internalCreateChain(providers);
+        let activeLock;
+        let passiveLock;
+        let credentials;
+        const provider = async (options) => {
+          if (options?.forceRefresh) {
+            return await chain(options);
+          }
+          if (credentials?.expiration) {
+            if (credentials?.expiration?.getTime() < Date.now()) {
+              credentials = undefined;
+            }
+          }
+          if (activeLock) {
+            await activeLock;
+          } else if (!credentials || treatAsExpired?.(credentials)) {
+            if (credentials) {
+              if (!passiveLock) {
+                passiveLock = chain(options).then((c) => {
+                  credentials = c;
+                  passiveLock = undefined;
+                });
+              }
+            } else {
+              activeLock = chain(options).then((c) => {
+                credentials = c;
+                activeLock = undefined;
+              });
+              return provider(options);
+            }
+          }
+          return credentials;
+        };
+        return provider;
+      }
+      const internalCreateChain =
+        (providers) => async (awsIdentityProperties) => {
+          let lastProviderError;
+          for (const provider of providers) {
+            try {
+              return await provider(awsIdentityProperties);
+            } catch (err) {
+              lastProviderError = err;
+              if (err?.tryNextLink) {
+                continue;
+              }
+              throw err;
+            }
+          }
+          throw lastProviderError;
+        };
+
       let multipleCredentialSourceWarningEmitted = false;
       const defaultProvider = (init = {}) =>
-        propertyProvider.memoize(
-          propertyProvider.chain(
+        memoizeChain(
+          [
             async () => {
               const profile =
                 init.profile ?? process.env[sharedIniFileLoader.ENV_PROFILE];
@@ -34682,7 +32945,7 @@ More information can be found at: https://a.co/74kJMmI`);
               );
               return credentialProviderEnv.fromEnv(init)();
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromSSO",
               );
@@ -34708,9 +32971,9 @@ More information can be found at: https://a.co/74kJMmI`);
               const { fromSSO } = await __nccwpck_require__
                 .e(/* import() */ 998)
                 .then(__nccwpck_require__.t.bind(__nccwpck_require__, 998, 19));
-              return fromSSO(init)();
+              return fromSSO(init)(awsIdentityProperties);
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromIni",
               );
@@ -34719,9 +32982,9 @@ More information can be found at: https://a.co/74kJMmI`);
                 .then(
                   __nccwpck_require__.t.bind(__nccwpck_require__, 5869, 19),
                 );
-              return fromIni(init)();
+              return fromIni(init)(awsIdentityProperties);
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromProcess",
               );
@@ -34730,20 +32993,19 @@ More information can be found at: https://a.co/74kJMmI`);
                 .then(
                   __nccwpck_require__.t.bind(__nccwpck_require__, 5360, 19),
                 );
-              return fromProcess(init)();
+              return fromProcess(init)(awsIdentityProperties);
             },
-            async () => {
+            async (awsIdentityProperties) => {
               init.logger?.debug(
                 "@aws-sdk/credential-provider-node - defaultProvider::fromTokenFile",
               );
               const { fromTokenFile } = await Promise.all(
                 /* import() */ [
-                  __nccwpck_require__.e(80),
                   __nccwpck_require__.e(136),
                   __nccwpck_require__.e(956),
                 ],
               ).then(__nccwpck_require__.t.bind(__nccwpck_require__, 9956, 23));
-              return fromTokenFile(init)();
+              return fromTokenFile(init)(awsIdentityProperties);
             },
             async () => {
               init.logger?.debug(
@@ -34760,9 +33022,8 @@ More information can be found at: https://a.co/74kJMmI`);
                 },
               );
             },
-          ),
+          ],
           credentialsTreatedAsExpired,
-          credentialsWillNeedRefresh,
         );
       const credentialsWillNeedRefresh = (credentials) =>
         credentials?.expiration !== undefined;
@@ -34777,6 +33038,297 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
+    /***/ 2590: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      var protocolHttp = __nccwpck_require__(2356);
+
+      function resolveHostHeaderConfig(input) {
+        return input;
+      }
+      const hostHeaderMiddleware = (options) => (next) => async (args) => {
+        if (!protocolHttp.HttpRequest.isInstance(args.request))
+          return next(args);
+        const { request } = args;
+        const { handlerProtocol = "" } = options.requestHandler.metadata || {};
+        if (
+          handlerProtocol.indexOf("h2") >= 0 &&
+          !request.headers[":authority"]
+        ) {
+          delete request.headers["host"];
+          request.headers[":authority"] =
+            request.hostname + (request.port ? ":" + request.port : "");
+        } else if (!request.headers["host"]) {
+          let host = request.hostname;
+          if (request.port != null) host += `:${request.port}`;
+          request.headers["host"] = host;
+        }
+        return next(args);
+      };
+      const hostHeaderMiddlewareOptions = {
+        name: "hostHeaderMiddleware",
+        step: "build",
+        priority: "low",
+        tags: ["HOST"],
+        override: true,
+      };
+      const getHostHeaderPlugin = (options) => ({
+        applyToStack: (clientStack) => {
+          clientStack.add(
+            hostHeaderMiddleware(options),
+            hostHeaderMiddlewareOptions,
+          );
+        },
+      });
+
+      exports.getHostHeaderPlugin = getHostHeaderPlugin;
+      exports.hostHeaderMiddleware = hostHeaderMiddleware;
+      exports.hostHeaderMiddlewareOptions = hostHeaderMiddlewareOptions;
+      exports.resolveHostHeaderConfig = resolveHostHeaderConfig;
+
+      /***/
+    },
+
+    /***/ 5242: /***/ (__unused_webpack_module, exports) => {
+      "use strict";
+
+      const loggerMiddleware = () => (next, context) => async (args) => {
+        try {
+          const response = await next(args);
+          const {
+            clientName,
+            commandName,
+            logger,
+            dynamoDbDocumentClientOptions = {},
+          } = context;
+          const {
+            overrideInputFilterSensitiveLog,
+            overrideOutputFilterSensitiveLog,
+          } = dynamoDbDocumentClientOptions;
+          const inputFilterSensitiveLog =
+            overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
+          const outputFilterSensitiveLog =
+            overrideOutputFilterSensitiveLog ??
+            context.outputFilterSensitiveLog;
+          const { $metadata, ...outputWithoutMetadata } = response.output;
+          logger?.info?.({
+            clientName,
+            commandName,
+            input: inputFilterSensitiveLog(args.input),
+            output: outputFilterSensitiveLog(outputWithoutMetadata),
+            metadata: $metadata,
+          });
+          return response;
+        } catch (error) {
+          const {
+            clientName,
+            commandName,
+            logger,
+            dynamoDbDocumentClientOptions = {},
+          } = context;
+          const { overrideInputFilterSensitiveLog } =
+            dynamoDbDocumentClientOptions;
+          const inputFilterSensitiveLog =
+            overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
+          logger?.error?.({
+            clientName,
+            commandName,
+            input: inputFilterSensitiveLog(args.input),
+            error,
+            metadata: error.$metadata,
+          });
+          throw error;
+        }
+      };
+      const loggerMiddlewareOptions = {
+        name: "loggerMiddleware",
+        tags: ["LOGGER"],
+        step: "initialize",
+        override: true,
+      };
+      const getLoggerPlugin = (options) => ({
+        applyToStack: (clientStack) => {
+          clientStack.add(loggerMiddleware(), loggerMiddlewareOptions);
+        },
+      });
+
+      exports.getLoggerPlugin = getLoggerPlugin;
+      exports.loggerMiddleware = loggerMiddleware;
+      exports.loggerMiddlewareOptions = loggerMiddlewareOptions;
+
+      /***/
+    },
+
+    /***/ 1568: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      var recursionDetectionMiddleware = __nccwpck_require__(2521);
+
+      const recursionDetectionMiddlewareOptions = {
+        step: "build",
+        tags: ["RECURSION_DETECTION"],
+        name: "recursionDetectionMiddleware",
+        override: true,
+        priority: "low",
+      };
+
+      const getRecursionDetectionPlugin = (options) => ({
+        applyToStack: (clientStack) => {
+          clientStack.add(
+            recursionDetectionMiddleware.recursionDetectionMiddleware(),
+            recursionDetectionMiddlewareOptions,
+          );
+        },
+      });
+
+      exports.getRecursionDetectionPlugin = getRecursionDetectionPlugin;
+      Object.keys(recursionDetectionMiddleware).forEach(function (k) {
+        if (
+          k !== "default" &&
+          !Object.prototype.hasOwnProperty.call(exports, k)
+        )
+          Object.defineProperty(exports, k, {
+            enumerable: true,
+            get: function () {
+              return recursionDetectionMiddleware[k];
+            },
+          });
+      });
+
+      /***/
+    },
+
+    /***/ 2521: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", { value: true });
+      exports.recursionDetectionMiddleware = void 0;
+      const lambda_invoke_store_1 = __nccwpck_require__(5886);
+      const protocol_http_1 = __nccwpck_require__(2356);
+      const TRACE_ID_HEADER_NAME = "X-Amzn-Trace-Id";
+      const ENV_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME";
+      const ENV_TRACE_ID = "_X_AMZN_TRACE_ID";
+      const recursionDetectionMiddleware = () => (next) => async (args) => {
+        const { request } = args;
+        if (!protocol_http_1.HttpRequest.isInstance(request)) {
+          return next(args);
+        }
+        const traceIdHeader =
+          Object.keys(request.headers ?? {}).find(
+            (h) => h.toLowerCase() === TRACE_ID_HEADER_NAME.toLowerCase(),
+          ) ?? TRACE_ID_HEADER_NAME;
+        if (request.headers.hasOwnProperty(traceIdHeader)) {
+          return next(args);
+        }
+        const functionName = process.env[ENV_LAMBDA_FUNCTION_NAME];
+        const traceIdFromEnv = process.env[ENV_TRACE_ID];
+        const traceIdFromInvokeStore =
+          lambda_invoke_store_1.InvokeStore.getXRayTraceId();
+        const traceId = traceIdFromInvokeStore ?? traceIdFromEnv;
+        const nonEmptyString = (str) =>
+          typeof str === "string" && str.length > 0;
+        if (nonEmptyString(functionName) && nonEmptyString(traceId)) {
+          request.headers[TRACE_ID_HEADER_NAME] = traceId;
+        }
+        return next({
+          ...args,
+          request,
+        });
+      };
+      exports.recursionDetectionMiddleware = recursionDetectionMiddleware;
+
+      /***/
+    },
+
+    /***/ 5886: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      var async_hooks = __nccwpck_require__(290);
+
+      const noGlobalAwsLambda =
+        process.env["AWS_LAMBDA_NODEJS_NO_GLOBAL_AWSLAMBDA"] === "1" ||
+        process.env["AWS_LAMBDA_NODEJS_NO_GLOBAL_AWSLAMBDA"] === "true";
+      if (!noGlobalAwsLambda) {
+        globalThis.awslambda = globalThis.awslambda || {};
+      }
+      const PROTECTED_KEYS = {
+        REQUEST_ID: Symbol("_AWS_LAMBDA_REQUEST_ID"),
+        X_RAY_TRACE_ID: Symbol("_AWS_LAMBDA_X_RAY_TRACE_ID"),
+        TENANT_ID: Symbol("_AWS_LAMBDA_TENANT_ID"),
+      };
+      class InvokeStoreImpl {
+        static storage = new async_hooks.AsyncLocalStorage();
+        static PROTECTED_KEYS = PROTECTED_KEYS;
+        static run(context, fn) {
+          return this.storage.run({ ...context }, fn);
+        }
+        static getContext() {
+          return this.storage.getStore();
+        }
+        static get(key) {
+          const context = this.storage.getStore();
+          return context?.[key];
+        }
+        static set(key, value) {
+          if (this.isProtectedKey(key)) {
+            throw new Error(`Cannot modify protected Lambda context field`);
+          }
+          const context = this.storage.getStore();
+          if (context) {
+            context[key] = value;
+          }
+        }
+        static getRequestId() {
+          return this.get(this.PROTECTED_KEYS.REQUEST_ID) ?? "-";
+        }
+        static getXRayTraceId() {
+          return this.get(this.PROTECTED_KEYS.X_RAY_TRACE_ID);
+        }
+        static getTenantId() {
+          return this.get(this.PROTECTED_KEYS.TENANT_ID);
+        }
+        static hasContext() {
+          return this.storage.getStore() !== undefined;
+        }
+        static isProtectedKey(key) {
+          return (
+            key === this.PROTECTED_KEYS.REQUEST_ID ||
+            key === this.PROTECTED_KEYS.X_RAY_TRACE_ID
+          );
+        }
+      }
+      let instance;
+      if (!noGlobalAwsLambda && globalThis.awslambda?.InvokeStore) {
+        instance = globalThis.awslambda.InvokeStore;
+      } else {
+        instance = InvokeStoreImpl;
+        if (!noGlobalAwsLambda && globalThis.awslambda) {
+          globalThis.awslambda.InvokeStore = instance;
+        }
+      }
+      const InvokeStore = instance;
+
+      exports.InvokeStore = InvokeStore;
+
+      /***/
+    },
+
     /***/ 2959: /***/ (
       __unused_webpack_module,
       exports,
@@ -34785,7 +33337,7 @@ More information can be found at: https://a.co/74kJMmI`);
       "use strict";
 
       var core = __nccwpck_require__(402);
-      var utilEndpoints = __nccwpck_require__(2547);
+      var utilEndpoints = __nccwpck_require__(3068);
       var protocolHttp = __nccwpck_require__(2356);
       var core$1 = __nccwpck_require__(8704);
 
@@ -34883,8 +33435,8 @@ More information can be found at: https://a.co/74kJMmI`);
       const X_AMZ_USER_AGENT = "x-amz-user-agent";
       const SPACE = " ";
       const UA_NAME_SEPARATOR = "/";
-      const UA_NAME_ESCAPE_REGEX = /[^\!\$\%\&\'\*\+\-\.\^\_\`\|\~\d\w]/g;
-      const UA_VALUE_ESCAPE_REGEX = /[^\!\$\%\&\'\*\+\-\.\^\_\`\|\~\d\w\#]/g;
+      const UA_NAME_ESCAPE_REGEX = /[^!$%&'*+\-.^_`|~\w]/g;
+      const UA_VALUE_ESCAPE_REGEX = /[^!$%&'*+\-.^_`|~\w#]/g;
       const UA_ESCAPE_CHAR = "-";
 
       const BYTE_LIMIT = 1024;
@@ -34925,7 +33477,7 @@ More information can be found at: https://a.co/74kJMmI`);
             options?.customUserAgent?.map(escapeUserAgent) || [];
           const appId = await options.userAgentAppId();
           if (appId) {
-            defaultUserAgent.push(escapeUserAgent([`app/${appId}`]));
+            defaultUserAgent.push(escapeUserAgent([`app`, `${appId}`]));
           }
           const prefix = utilEndpoints.getUserAgentPrefix();
           const sdkUserAgentValue = (prefix ? [prefix] : [])
@@ -35005,7 +33557,123 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
-    /***/ 2547: /***/ (
+    /***/ 6463: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      var configResolver = __nccwpck_require__(9316);
+      var stsRegionDefaultResolver = __nccwpck_require__(5779);
+
+      const getAwsRegionExtensionConfiguration = (runtimeConfig) => {
+        return {
+          setRegion(region) {
+            runtimeConfig.region = region;
+          },
+          region() {
+            return runtimeConfig.region;
+          },
+        };
+      };
+      const resolveAwsRegionExtensionConfiguration = (
+        awsRegionExtensionConfiguration,
+      ) => {
+        return {
+          region: awsRegionExtensionConfiguration.region(),
+        };
+      };
+
+      Object.defineProperty(exports, "NODE_REGION_CONFIG_FILE_OPTIONS", {
+        enumerable: true,
+        get: function () {
+          return configResolver.NODE_REGION_CONFIG_FILE_OPTIONS;
+        },
+      });
+      Object.defineProperty(exports, "NODE_REGION_CONFIG_OPTIONS", {
+        enumerable: true,
+        get: function () {
+          return configResolver.NODE_REGION_CONFIG_OPTIONS;
+        },
+      });
+      Object.defineProperty(exports, "REGION_ENV_NAME", {
+        enumerable: true,
+        get: function () {
+          return configResolver.REGION_ENV_NAME;
+        },
+      });
+      Object.defineProperty(exports, "REGION_INI_NAME", {
+        enumerable: true,
+        get: function () {
+          return configResolver.REGION_INI_NAME;
+        },
+      });
+      Object.defineProperty(exports, "resolveRegionConfig", {
+        enumerable: true,
+        get: function () {
+          return configResolver.resolveRegionConfig;
+        },
+      });
+      exports.getAwsRegionExtensionConfiguration =
+        getAwsRegionExtensionConfiguration;
+      exports.resolveAwsRegionExtensionConfiguration =
+        resolveAwsRegionExtensionConfiguration;
+      Object.keys(stsRegionDefaultResolver).forEach(function (k) {
+        if (
+          k !== "default" &&
+          !Object.prototype.hasOwnProperty.call(exports, k)
+        )
+          Object.defineProperty(exports, k, {
+            enumerable: true,
+            get: function () {
+              return stsRegionDefaultResolver[k];
+            },
+          });
+      });
+
+      /***/
+    },
+
+    /***/ 5779: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", { value: true });
+      exports.warning = void 0;
+      exports.stsRegionDefaultResolver = stsRegionDefaultResolver;
+      const config_resolver_1 = __nccwpck_require__(9316);
+      const node_config_provider_1 = __nccwpck_require__(5704);
+      function stsRegionDefaultResolver(loaderConfig = {}) {
+        return (0, node_config_provider_1.loadConfig)(
+          {
+            ...config_resolver_1.NODE_REGION_CONFIG_OPTIONS,
+            async default() {
+              if (!exports.warning.silence) {
+                console.warn(
+                  "@aws-sdk - WARN - default STS region of us-east-1 used. See @aws-sdk/credential-providers README and set a region explicitly.",
+                );
+              }
+              return "us-east-1";
+            },
+          },
+          {
+            ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS,
+            ...loaderConfig,
+          },
+        );
+      }
+      exports.warning = {
+        silence: false,
+      };
+
+      /***/
+    },
+
+    /***/ 3068: /***/ (
       __unused_webpack_module,
       exports,
       __nccwpck_require__,
@@ -35265,6 +33933,9 @@ More information can be found at: https://a.co/74kJMmI`);
             },
             "us-isob-east-1": {
               description: "US ISOB East (Ohio)",
+            },
+            "us-isob-west-1": {
+              description: "US ISOB West",
             },
           },
         },
@@ -35528,7 +34199,148 @@ More information can be found at: https://a.co/74kJMmI`);
       /***/
     },
 
-    /***/ 7453: /***/ (
+    /***/ 4274: /***/ (
+      __unused_webpack_module,
+      exports,
+      __nccwpck_require__,
+    ) => {
+      "use strict";
+
+      var xmlParser = __nccwpck_require__(3343);
+
+      function escapeAttribute(value) {
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function escapeElement(value) {
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\r/g, "&#x0D;")
+          .replace(/\n/g, "&#x0A;")
+          .replace(/\u0085/g, "&#x85;")
+          .replace(/\u2028/, "&#x2028;");
+      }
+
+      class XmlText {
+        value;
+        constructor(value) {
+          this.value = value;
+        }
+        toString() {
+          return escapeElement("" + this.value);
+        }
+      }
+
+      class XmlNode {
+        name;
+        children;
+        attributes = {};
+        static of(name, childText, withName) {
+          const node = new XmlNode(name);
+          if (childText !== undefined) {
+            node.addChildNode(new XmlText(childText));
+          }
+          if (withName !== undefined) {
+            node.withName(withName);
+          }
+          return node;
+        }
+        constructor(name, children = []) {
+          this.name = name;
+          this.children = children;
+        }
+        withName(name) {
+          this.name = name;
+          return this;
+        }
+        addAttribute(name, value) {
+          this.attributes[name] = value;
+          return this;
+        }
+        addChildNode(child) {
+          this.children.push(child);
+          return this;
+        }
+        removeAttribute(name) {
+          delete this.attributes[name];
+          return this;
+        }
+        n(name) {
+          this.name = name;
+          return this;
+        }
+        c(child) {
+          this.children.push(child);
+          return this;
+        }
+        a(name, value) {
+          if (value != null) {
+            this.attributes[name] = value;
+          }
+          return this;
+        }
+        cc(input, field, withName = field) {
+          if (input[field] != null) {
+            const node = XmlNode.of(field, input[field]).withName(withName);
+            this.c(node);
+          }
+        }
+        l(input, listName, memberName, valueProvider) {
+          if (input[listName] != null) {
+            const nodes = valueProvider();
+            nodes.map((node) => {
+              node.withName(memberName);
+              this.c(node);
+            });
+          }
+        }
+        lc(input, listName, memberName, valueProvider) {
+          if (input[listName] != null) {
+            const nodes = valueProvider();
+            const containerNode = new XmlNode(memberName);
+            nodes.map((node) => {
+              containerNode.c(node);
+            });
+            this.c(containerNode);
+          }
+        }
+        toString() {
+          const hasChildren = Boolean(this.children.length);
+          let xmlText = `<${this.name}`;
+          const attributes = this.attributes;
+          for (const attributeName of Object.keys(attributes)) {
+            const attribute = attributes[attributeName];
+            if (attribute != null) {
+              xmlText += ` ${attributeName}="${escapeAttribute("" + attribute)}"`;
+            }
+          }
+          return (xmlText += !hasChildren
+            ? "/>"
+            : `>${this.children.map((c) => c.toString()).join("")}</${this.name}>`);
+        }
+      }
+
+      Object.defineProperty(exports, "parseXML", {
+        enumerable: true,
+        get: function () {
+          return xmlParser.parseXML;
+        },
+      });
+      exports.XmlNode = XmlNode;
+      exports.XmlText = XmlText;
+
+      /***/
+    },
+
+    /***/ 3343: /***/ (
       __unused_webpack_module,
       exports,
       __nccwpck_require__,
@@ -35536,96 +34348,23 @@ More information can be found at: https://a.co/74kJMmI`);
       "use strict";
 
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.InvokeStore = void 0;
-      const async_hooks_1 = __nccwpck_require__(290);
-      // AWS_LAMBDA_NODEJS_NO_GLOBAL_AWSLAMBDA provides an escape hatch since we're modifying the global object which may not be expected to a customer's handler.
-      const noGlobalAwsLambda =
-        process.env["AWS_LAMBDA_NODEJS_NO_GLOBAL_AWSLAMBDA"] === "1" ||
-        process.env["AWS_LAMBDA_NODEJS_NO_GLOBAL_AWSLAMBDA"] === "true";
-      if (!noGlobalAwsLambda) {
-        globalThis.awslambda = globalThis.awslambda || {};
+      exports.parseXML = parseXML;
+      const fast_xml_parser_1 = __nccwpck_require__(591);
+      const parser = new fast_xml_parser_1.XMLParser({
+        attributeNamePrefix: "",
+        htmlEntities: true,
+        ignoreAttributes: false,
+        ignoreDeclaration: true,
+        parseTagValue: false,
+        trimValues: false,
+        tagValueProcessor: (_, val) =>
+          val.trim() === "" && val.includes("\n") ? "" : undefined,
+      });
+      parser.addEntity("#xD", "\r");
+      parser.addEntity("#10", "\n");
+      function parseXML(xmlString) {
+        return parser.parse(xmlString, true);
       }
-      const PROTECTED_KEYS = {
-        REQUEST_ID: Symbol("_AWS_LAMBDA_REQUEST_ID"),
-        X_RAY_TRACE_ID: Symbol("_AWS_LAMBDA_X_RAY_TRACE_ID"),
-      };
-      /**
-       * InvokeStore implementation class
-       */
-      class InvokeStoreImpl {
-        static storage = new async_hooks_1.AsyncLocalStorage();
-        // Protected keys for Lambda context fields
-        static PROTECTED_KEYS = PROTECTED_KEYS;
-        /**
-         * Initialize and run code within an invoke context
-         */
-        static run(context, fn) {
-          return this.storage.run({ ...context }, fn);
-        }
-        /**
-         * Get the complete current context
-         */
-        static getContext() {
-          return this.storage.getStore();
-        }
-        /**
-         * Get a specific value from the context by key
-         */
-        static get(key) {
-          const context = this.storage.getStore();
-          return context?.[key];
-        }
-        /**
-         * Set a custom value in the current context
-         * Protected Lambda context fields cannot be overwritten
-         */
-        static set(key, value) {
-          if (this.isProtectedKey(key)) {
-            throw new Error(`Cannot modify protected Lambda context field`);
-          }
-          const context = this.storage.getStore();
-          if (context) {
-            context[key] = value;
-          }
-        }
-        /**
-         * Get the current request ID
-         */
-        static getRequestId() {
-          return this.get(this.PROTECTED_KEYS.REQUEST_ID) ?? "-";
-        }
-        /**
-         * Get the current X-ray trace ID
-         */
-        static getXRayTraceId() {
-          return this.get(this.PROTECTED_KEYS.X_RAY_TRACE_ID);
-        }
-        /**
-         * Check if we're currently within an invoke context
-         */
-        static hasContext() {
-          return this.storage.getStore() !== undefined;
-        }
-        /**
-         * Check if a key is protected (readonly Lambda context field)
-         */
-        static isProtectedKey(key) {
-          return (
-            key === this.PROTECTED_KEYS.REQUEST_ID ||
-            key === this.PROTECTED_KEYS.X_RAY_TRACE_ID
-          );
-        }
-      }
-      let instance;
-      if (!noGlobalAwsLambda && globalThis.awslambda?.InvokeStore) {
-        instance = globalThis.awslambda.InvokeStore;
-      } else {
-        instance = InvokeStoreImpl;
-        if (!noGlobalAwsLambda && globalThis.awslambda) {
-          globalThis.awslambda.InvokeStore = instance;
-        }
-      }
-      exports.InvokeStore = instance;
 
       /***/
     },
@@ -35639,6 +34378,7 @@ More information can be found at: https://a.co/74kJMmI`);
 
       var utilConfigProvider = __nccwpck_require__(6716);
       var utilMiddleware = __nccwpck_require__(6324);
+      var utilEndpoints = __nccwpck_require__(9674);
 
       const ENV_USE_DUALSTACK_ENDPOINT = "AWS_USE_DUALSTACK_ENDPOINT";
       const CONFIG_USE_DUALSTACK_ENDPOINT = "use_dualstack_endpoint";
@@ -35749,6 +34489,17 @@ More information can be found at: https://a.co/74kJMmI`);
         preferredFile: "credentials",
       };
 
+      const validRegions = new Set();
+      const checkRegion = (region, check = utilEndpoints.isValidHostLabel) => {
+        if (!validRegions.has(region) && !check(region)) {
+          throw new Error(
+            `Region not accepted: region="${region}" is not a valid hostname component.`,
+          );
+        } else {
+          validRegions.add(region);
+        }
+      };
+
       const isFipsRegion = (region) =>
         typeof region === "string" &&
         (region.startsWith("fips-") || region.endsWith("-fips"));
@@ -35767,11 +34518,11 @@ More information can be found at: https://a.co/74kJMmI`);
         }
         return Object.assign(input, {
           region: async () => {
-            if (typeof region === "string") {
-              return getRealRegion(region);
-            }
-            const providedRegion = await region();
-            return getRealRegion(providedRegion);
+            const providedRegion =
+              typeof region === "function" ? await region() : region;
+            const realRegion = getRealRegion(providedRegion);
+            checkRegion(realRegion);
+            return realRegion;
           },
           useFipsEndpoint: async () => {
             const providedRegion =
@@ -39859,18 +38610,18 @@ More information can be found at: https://a.co/74kJMmI`);
         range(hours, 0, 23);
         range(minutes, 0, 59);
         range(seconds, 0, 60);
-        const date = new Date();
-        date.setUTCFullYear(
-          Number(yearStr),
-          Number(monthStr) - 1,
-          Number(dayStr),
+        const date = new Date(
+          Date.UTC(
+            Number(yearStr),
+            Number(monthStr) - 1,
+            Number(dayStr),
+            Number(hours),
+            Number(minutes),
+            Number(seconds),
+            Number(ms) ? Math.round(parseFloat(`0.${ms}`) * 1000) : 0,
+          ),
         );
-        date.setUTCHours(Number(hours));
-        date.setUTCMinutes(Number(minutes));
-        date.setUTCSeconds(Number(seconds));
-        date.setUTCMilliseconds(
-          Number(ms) ? Math.round(parseFloat(`0.${ms}`) * 1000) : 0,
-        );
+        date.setUTCFullYear(Number(yearStr));
         if (offsetStr.toUpperCase() != "Z") {
           const [, sign, offsetH, offsetM] = /([+-])(\d\d):(\d\d)/.exec(
             offsetStr,
@@ -39909,20 +38660,21 @@ More information can be found at: https://a.co/74kJMmI`);
           [, month, day, hour, minute, second, fraction, year] = matches;
         }
         if (year && second) {
-          const date = new Date();
-          date.setUTCFullYear(Number(year));
-          date.setUTCMonth(months.indexOf(month));
-          range(day, 1, 31);
-          date.setUTCDate(Number(day));
-          range(hour, 0, 23);
-          date.setUTCHours(Number(hour));
-          range(minute, 0, 59);
-          date.setUTCMinutes(Number(minute));
-          range(second, 0, 60);
-          date.setUTCSeconds(Number(second));
-          date.setUTCMilliseconds(
+          const timestamp = Date.UTC(
+            Number(year),
+            months.indexOf(month),
+            Number(day),
+            Number(hour),
+            Number(minute),
+            Number(second),
             fraction ? Math.round(parseFloat(`0.${fraction}`) * 1000) : 0,
           );
+          range(day, 1, 31);
+          range(hour, 0, 23);
+          range(minute, 0, 59);
+          range(second, 0, 60);
+          const date = new Date(timestamp);
+          date.setUTCFullYear(Number(year));
           return date;
         }
         throw new TypeError(`Invalid RFC7231 date-time value ${value}.`);
@@ -42011,12 +40763,13 @@ More information can be found at: https://a.co/74kJMmI`);
         httpRequest,
         request,
         maxContinueTimeoutMs = MIN_WAIT_TIME,
+        externalAgent = false,
       ) {
         const headers = request.headers ?? {};
-        const expect = headers["Expect"] || headers["expect"];
+        const expect = headers.Expect || headers.expect;
         let timeoutId = -1;
         let sendBody = true;
-        if (expect === "100-continue") {
+        if (!externalAgent && expect === "100-continue") {
           sendBody = await Promise.race([
             new Promise((resolve) => {
               timeoutId = Number(
@@ -42079,6 +40832,7 @@ More information can be found at: https://a.co/74kJMmI`);
         config;
         configProvider;
         socketWarningTimestamp = 0;
+        externalAgent = false;
         metadata = { handlerProtocol: "http/1.1" };
         static create(instanceOrOptions) {
           if (typeof instanceOrOptions?.handle === "function") {
@@ -42152,6 +40906,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
                 httpAgent instanceof http.Agent ||
                 typeof httpAgent?.destroy === "function"
               ) {
+                this.externalAgent = true;
                 return httpAgent;
               }
               return new http.Agent({ keepAlive, maxSockets, ...httpAgent });
@@ -42161,6 +40916,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
                 httpsAgent instanceof https.Agent ||
                 typeof httpsAgent?.destroy === "function"
               ) {
+                this.externalAgent = true;
                 return httpsAgent;
               }
               return new https.Agent({ keepAlive, maxSockets, ...httpsAgent });
@@ -42177,6 +40933,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
             this.config = await this.configProvider;
           }
           return new Promise((_resolve, _reject) => {
+            const config = this.config;
             let writeRequestBodyPromise = undefined;
             const timeouts = [];
             const resolve = async (arg) => {
@@ -42189,11 +40946,6 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
               timeouts.forEach(timing.clearTimeout);
               _reject(arg);
             };
-            if (!this.config) {
-              throw new Error(
-                "Node HTTP request handler config is not resolved",
-              );
-            }
             if (abortSignal?.aborted) {
               const abortError = new Error("Request aborted");
               abortError.name = "AbortError";
@@ -42201,9 +40953,16 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
               return;
             }
             const isSSL = request.protocol === "https:";
-            const agent = isSSL
-              ? this.config.httpsAgent
-              : this.config.httpAgent;
+            const headers = request.headers ?? {};
+            const expectContinue =
+              (headers.Expect ?? headers.expect) === "100-continue";
+            let agent = isSSL ? config.httpsAgent : config.httpAgent;
+            if (expectContinue && !this.externalAgent) {
+              agent = new (isSSL ? https.Agent : http.Agent)({
+                keepAlive: false,
+                maxSockets: Infinity,
+              });
+            }
             timeouts.push(
               timing.setTimeout(
                 () => {
@@ -42211,12 +40970,12 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
                     NodeHttpHandler.checkSocketUsage(
                       agent,
                       this.socketWarningTimestamp,
-                      this.config.logger,
+                      config.logger,
                     );
                 },
-                this.config.socketAcquisitionWarningTimeout ??
-                  (this.config.requestTimeout ?? 2000) +
-                    (this.config.connectionTimeout ?? 1000),
+                config.socketAcquisitionWarningTimeout ??
+                  (config.requestTimeout ?? 2000) +
+                    (config.connectionTimeout ?? 1000),
               ),
             );
             const queryString = querystringBuilder.buildQueryString(
@@ -42285,22 +41044,20 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
               }
             }
             const effectiveRequestTimeout =
-              requestTimeout ?? this.config.requestTimeout;
+              requestTimeout ?? config.requestTimeout;
             timeouts.push(
-              setConnectionTimeout(req, reject, this.config.connectionTimeout),
+              setConnectionTimeout(req, reject, config.connectionTimeout),
             );
             timeouts.push(
               setRequestTimeout(
                 req,
                 reject,
                 effectiveRequestTimeout,
-                this.config.throwOnRequestTimeout,
-                this.config.logger ?? console,
+                config.throwOnRequestTimeout,
+                config.logger ?? console,
               ),
             );
-            timeouts.push(
-              setSocketTimeout(req, reject, this.config.socketTimeout),
-            );
+            timeouts.push(setSocketTimeout(req, reject, config.socketTimeout));
             const httpAgent = nodeHttpsOptions.agent;
             if (typeof httpAgent === "object" && "keepAlive" in httpAgent) {
               timeouts.push(
@@ -42314,6 +41071,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
               req,
               request,
               effectiveRequestTimeout,
+              this.externalAgent,
             ).catch((e) => {
               timeouts.forEach(timing.clearTimeout);
               return _reject(e);
@@ -47565,6 +46323,19 @@ ${utilHexEncoding.toHex(hashedRequest)}`;
     /***/ 5290: /***/ (__unused_webpack_module, exports) => {
       "use strict";
 
+      const getCircularReplacer = () => {
+        const seen = new WeakSet();
+        return (key, value) => {
+          if (typeof value === "object" && value !== null) {
+            if (seen.has(value)) {
+              return "[Circular]";
+            }
+            seen.add(value);
+          }
+          return value;
+        };
+      };
+
       const sleep = (seconds) => {
         return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
       };
@@ -47584,24 +46355,30 @@ ${utilHexEncoding.toHex(hashedRequest)}`;
       const checkExceptions = (result) => {
         if (result.state === exports.WaiterState.ABORTED) {
           const abortError = new Error(
-            `${JSON.stringify({
-              ...result,
-              reason: "Request was aborted",
-            })}`,
+            `${JSON.stringify(
+              {
+                ...result,
+                reason: "Request was aborted",
+              },
+              getCircularReplacer(),
+            )}`,
           );
           abortError.name = "AbortError";
           throw abortError;
         } else if (result.state === exports.WaiterState.TIMEOUT) {
           const timeoutError = new Error(
-            `${JSON.stringify({
-              ...result,
-              reason: "Waiter has timed out",
-            })}`,
+            `${JSON.stringify(
+              {
+                ...result,
+                reason: "Waiter has timed out",
+              },
+              getCircularReplacer(),
+            )}`,
           );
           timeoutError.name = "TimeoutError";
           throw timeoutError;
         } else if (result.state !== exports.WaiterState.SUCCESS) {
-          throw new Error(`${JSON.stringify(result)}`);
+          throw new Error(`${JSON.stringify(result, getCircularReplacer())}`);
         }
         return result;
       };
@@ -47681,7 +46458,11 @@ ${utilHexEncoding.toHex(hashedRequest)}`;
           }
           return `${reason.$metadata.httpStatusCode}: OK`;
         }
-        return String(reason?.message ?? JSON.stringify(reason) ?? "Unknown");
+        return String(
+          reason?.message ??
+            JSON.stringify(reason, getCircularReplacer()) ??
+            "Unknown",
+        );
       };
 
       const validateWaiterOptions = (options) => {
@@ -77009,7 +75790,7 @@ ${pendingInterceptorsFormatter.format(pending)}
     /***/ 847: /***/ (module) => {
       "use strict";
       module.exports = /*#__PURE__*/ JSON.parse(
-        '{"name":"@aws-sdk/client-cloudfront","description":"AWS SDK for JavaScript Cloudfront Client for Node.js, Browser and React Native","version":"3.913.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-cloudfront","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo cloudfront"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.911.0","@aws-sdk/credential-provider-node":"3.913.0","@aws-sdk/middleware-host-header":"3.910.0","@aws-sdk/middleware-logger":"3.910.0","@aws-sdk/middleware-recursion-detection":"3.910.0","@aws-sdk/middleware-user-agent":"3.911.0","@aws-sdk/region-config-resolver":"3.910.0","@aws-sdk/types":"3.910.0","@aws-sdk/util-endpoints":"3.910.0","@aws-sdk/util-user-agent-browser":"3.910.0","@aws-sdk/util-user-agent-node":"3.911.0","@aws-sdk/xml-builder":"3.911.0","@smithy/config-resolver":"^4.3.2","@smithy/core":"^3.16.1","@smithy/fetch-http-handler":"^5.3.3","@smithy/hash-node":"^4.2.2","@smithy/invalid-dependency":"^4.2.2","@smithy/middleware-content-length":"^4.2.2","@smithy/middleware-endpoint":"^4.3.3","@smithy/middleware-retry":"^4.4.3","@smithy/middleware-serde":"^4.2.2","@smithy/middleware-stack":"^4.2.2","@smithy/node-config-provider":"^4.3.2","@smithy/node-http-handler":"^4.4.1","@smithy/protocol-http":"^5.3.2","@smithy/smithy-client":"^4.8.1","@smithy/types":"^4.7.1","@smithy/url-parser":"^4.2.2","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.2","@smithy/util-defaults-mode-node":"^4.2.3","@smithy/util-endpoints":"^3.2.2","@smithy/util-middleware":"^4.2.2","@smithy/util-retry":"^4.2.2","@smithy/util-stream":"^4.5.2","@smithy/util-utf8":"^4.2.0","@smithy/util-waiter":"^4.2.2","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-cloudfront","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-cloudfront"}}',
+        '{"name":"@aws-sdk/client-cloudfront","description":"AWS SDK for JavaScript Cloudfront Client for Node.js, Browser and React Native","version":"3.922.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-cloudfront","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo cloudfront"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.922.0","@aws-sdk/credential-provider-node":"3.922.0","@aws-sdk/middleware-host-header":"3.922.0","@aws-sdk/middleware-logger":"3.922.0","@aws-sdk/middleware-recursion-detection":"3.922.0","@aws-sdk/middleware-user-agent":"3.922.0","@aws-sdk/region-config-resolver":"3.922.0","@aws-sdk/types":"3.922.0","@aws-sdk/util-endpoints":"3.922.0","@aws-sdk/util-user-agent-browser":"3.922.0","@aws-sdk/util-user-agent-node":"3.922.0","@aws-sdk/xml-builder":"3.921.0","@smithy/config-resolver":"^4.4.1","@smithy/core":"^3.17.2","@smithy/fetch-http-handler":"^5.3.5","@smithy/hash-node":"^4.2.4","@smithy/invalid-dependency":"^4.2.4","@smithy/middleware-content-length":"^4.2.4","@smithy/middleware-endpoint":"^4.3.6","@smithy/middleware-retry":"^4.4.6","@smithy/middleware-serde":"^4.2.4","@smithy/middleware-stack":"^4.2.4","@smithy/node-config-provider":"^4.3.4","@smithy/node-http-handler":"^4.4.4","@smithy/protocol-http":"^5.3.4","@smithy/smithy-client":"^4.9.2","@smithy/types":"^4.8.1","@smithy/url-parser":"^4.2.4","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.5","@smithy/util-defaults-mode-node":"^4.2.7","@smithy/util-endpoints":"^3.2.4","@smithy/util-middleware":"^4.2.4","@smithy/util-retry":"^4.2.4","@smithy/util-stream":"^4.5.5","@smithy/util-utf8":"^4.2.0","@smithy/util-waiter":"^4.2.4","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-cloudfront","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-cloudfront"}}',
       );
 
       /***/
@@ -77018,7 +75799,7 @@ ${pendingInterceptorsFormatter.format(pending)}
     /***/ 4967: /***/ (module) => {
       "use strict";
       module.exports = /*#__PURE__*/ JSON.parse(
-        '{"name":"@aws-sdk/client-resource-groups-tagging-api","description":"AWS SDK for JavaScript Resource Groups Tagging Api Client for Node.js, Browser and React Native","version":"3.913.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-resource-groups-tagging-api","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo resource-groups-tagging-api"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.911.0","@aws-sdk/credential-provider-node":"3.913.0","@aws-sdk/middleware-host-header":"3.910.0","@aws-sdk/middleware-logger":"3.910.0","@aws-sdk/middleware-recursion-detection":"3.910.0","@aws-sdk/middleware-user-agent":"3.911.0","@aws-sdk/region-config-resolver":"3.910.0","@aws-sdk/types":"3.910.0","@aws-sdk/util-endpoints":"3.910.0","@aws-sdk/util-user-agent-browser":"3.910.0","@aws-sdk/util-user-agent-node":"3.911.0","@smithy/config-resolver":"^4.3.2","@smithy/core":"^3.16.1","@smithy/fetch-http-handler":"^5.3.3","@smithy/hash-node":"^4.2.2","@smithy/invalid-dependency":"^4.2.2","@smithy/middleware-content-length":"^4.2.2","@smithy/middleware-endpoint":"^4.3.3","@smithy/middleware-retry":"^4.4.3","@smithy/middleware-serde":"^4.2.2","@smithy/middleware-stack":"^4.2.2","@smithy/node-config-provider":"^4.3.2","@smithy/node-http-handler":"^4.4.1","@smithy/protocol-http":"^5.3.2","@smithy/smithy-client":"^4.8.1","@smithy/types":"^4.7.1","@smithy/url-parser":"^4.2.2","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.2","@smithy/util-defaults-mode-node":"^4.2.3","@smithy/util-endpoints":"^3.2.2","@smithy/util-middleware":"^4.2.2","@smithy/util-retry":"^4.2.2","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-resource-groups-tagging-api","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-resource-groups-tagging-api"}}',
+        '{"name":"@aws-sdk/client-resource-groups-tagging-api","description":"AWS SDK for JavaScript Resource Groups Tagging Api Client for Node.js, Browser and React Native","version":"3.922.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-resource-groups-tagging-api","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo resource-groups-tagging-api"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.922.0","@aws-sdk/credential-provider-node":"3.922.0","@aws-sdk/middleware-host-header":"3.922.0","@aws-sdk/middleware-logger":"3.922.0","@aws-sdk/middleware-recursion-detection":"3.922.0","@aws-sdk/middleware-user-agent":"3.922.0","@aws-sdk/region-config-resolver":"3.922.0","@aws-sdk/types":"3.922.0","@aws-sdk/util-endpoints":"3.922.0","@aws-sdk/util-user-agent-browser":"3.922.0","@aws-sdk/util-user-agent-node":"3.922.0","@smithy/config-resolver":"^4.4.1","@smithy/core":"^3.17.2","@smithy/fetch-http-handler":"^5.3.5","@smithy/hash-node":"^4.2.4","@smithy/invalid-dependency":"^4.2.4","@smithy/middleware-content-length":"^4.2.4","@smithy/middleware-endpoint":"^4.3.6","@smithy/middleware-retry":"^4.4.6","@smithy/middleware-serde":"^4.2.4","@smithy/middleware-stack":"^4.2.4","@smithy/node-config-provider":"^4.3.4","@smithy/node-http-handler":"^4.4.4","@smithy/protocol-http":"^5.3.4","@smithy/smithy-client":"^4.9.2","@smithy/types":"^4.8.1","@smithy/url-parser":"^4.2.4","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.5","@smithy/util-defaults-mode-node":"^4.2.7","@smithy/util-endpoints":"^3.2.4","@smithy/util-middleware":"^4.2.4","@smithy/util-retry":"^4.2.4","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-resource-groups-tagging-api","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-resource-groups-tagging-api"}}',
       );
 
       /***/

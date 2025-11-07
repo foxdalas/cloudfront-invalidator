@@ -79,7 +79,7 @@ exports.modules = {
   /***/ 546: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.defaultEndpointResolver = void 0;
-    const util_endpoints_1 = __webpack_require__(6707);
+    const util_endpoints_1 = __webpack_require__(3068);
     const util_endpoints_2 = __webpack_require__(9674);
     const ruleset_1 = __webpack_require__(9947);
     const cache = new util_endpoints_2.EndpointCache({
@@ -116,8 +116,8 @@ exports.modules = {
       f = "tree",
       g = "PartitionResult",
       h = "getAttr",
-      i = { [u]: false, type: "String" },
-      j = { [u]: true, default: false, type: "Boolean" },
+      i = { [u]: false, type: "string" },
+      j = { [u]: true, default: false, type: "boolean" },
       k = { [x]: "Endpoint" },
       l = { [v]: c, [w]: [{ [x]: "UseFIPS" }, true] },
       m = { [v]: c, [w]: [{ [x]: "UseDualStack" }, true] },
@@ -271,9 +271,9 @@ exports.modules = {
   /***/ 9443: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
     var __webpack_unused_export__;
 
-    var middlewareHostHeader = __webpack_require__(2401);
-    var middlewareLogger = __webpack_require__(4587);
-    var middlewareRecursionDetection = __webpack_require__(5767);
+    var middlewareHostHeader = __webpack_require__(2590);
+    var middlewareLogger = __webpack_require__(5242);
+    var middlewareRecursionDetection = __webpack_require__(1568);
     var middlewareUserAgent = __webpack_require__(2959);
     var configResolver = __webpack_require__(9316);
     var core = __webpack_require__(402);
@@ -283,7 +283,7 @@ exports.modules = {
     var smithyClient = __webpack_require__(1411);
     var httpAuthSchemeProvider = __webpack_require__(8396);
     var runtimeConfig = __webpack_require__(6901);
-    var regionConfigResolver = __webpack_require__(3084);
+    var regionConfigResolver = __webpack_require__(6463);
     var protocolHttp = __webpack_require__(2356);
     var middlewareSerde = __webpack_require__(3255);
     var core$1 = __webpack_require__(8704);
@@ -1148,6 +1148,14 @@ exports.modules = {
       };
     };
     exports.getRuntimeConfig = getRuntimeConfig;
+
+    /***/
+  },
+
+  /***/ 9955: /***/ (module) => {
+    module.exports = /*#__PURE__*/ JSON.parse(
+      '{"name":"@aws-sdk/nested-clients","version":"3.922.0","description":"Nested clients for AWS SDK packages.","main":"./dist-cjs/index.js","module":"./dist-es/index.js","types":"./dist-types/index.d.ts","scripts":{"build":"yarn lint && concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline nested-clients","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","lint":"node ../../scripts/validation/submodules-linter.js --pkg nested-clients","test":"yarn g:vitest run","test:watch":"yarn g:vitest watch"},"engines":{"node":">=18.0.0"},"sideEffects":false,"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.922.0","@aws-sdk/middleware-host-header":"3.922.0","@aws-sdk/middleware-logger":"3.922.0","@aws-sdk/middleware-recursion-detection":"3.922.0","@aws-sdk/middleware-user-agent":"3.922.0","@aws-sdk/region-config-resolver":"3.922.0","@aws-sdk/types":"3.922.0","@aws-sdk/util-endpoints":"3.922.0","@aws-sdk/util-user-agent-browser":"3.922.0","@aws-sdk/util-user-agent-node":"3.922.0","@smithy/config-resolver":"^4.4.1","@smithy/core":"^3.17.2","@smithy/fetch-http-handler":"^5.3.5","@smithy/hash-node":"^4.2.4","@smithy/invalid-dependency":"^4.2.4","@smithy/middleware-content-length":"^4.2.4","@smithy/middleware-endpoint":"^4.3.6","@smithy/middleware-retry":"^4.4.6","@smithy/middleware-serde":"^4.2.4","@smithy/middleware-stack":"^4.2.4","@smithy/node-config-provider":"^4.3.4","@smithy/node-http-handler":"^4.4.4","@smithy/protocol-http":"^5.3.4","@smithy/smithy-client":"^4.9.2","@smithy/types":"^4.8.1","@smithy/url-parser":"^4.2.4","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.5","@smithy/util-defaults-mode-node":"^4.2.7","@smithy/util-endpoints":"^3.2.4","@smithy/util-middleware":"^4.2.4","@smithy/util-retry":"^4.2.4","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["./sso-oidc.d.ts","./sso-oidc.js","./sts.d.ts","./sts.js","dist-*/**"],"browser":{"./dist-es/submodules/sso-oidc/runtimeConfig":"./dist-es/submodules/sso-oidc/runtimeConfig.browser","./dist-es/submodules/sts/runtimeConfig":"./dist-es/submodules/sts/runtimeConfig.browser"},"react-native":{},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/packages/nested-clients","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"packages/nested-clients"},"exports":{"./sso-oidc":{"types":"./dist-types/submodules/sso-oidc/index.d.ts","module":"./dist-es/submodules/sso-oidc/index.js","node":"./dist-cjs/submodules/sso-oidc/index.js","import":"./dist-es/submodules/sso-oidc/index.js","require":"./dist-cjs/submodules/sso-oidc/index.js"},"./sts":{"types":"./dist-types/submodules/sts/index.d.ts","module":"./dist-es/submodules/sts/index.js","node":"./dist-cjs/submodules/sts/index.js","import":"./dist-es/submodules/sts/index.js","require":"./dist-cjs/submodules/sts/index.js"}}}',
+    );
 
     /***/
   },
