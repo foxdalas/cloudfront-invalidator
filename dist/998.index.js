@@ -90,7 +90,7 @@ exports.modules = {
   /***/ 3903: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.defaultEndpointResolver = void 0;
-    const util_endpoints_1 = __webpack_require__(3068);
+    const util_endpoints_1 = __webpack_require__(3956);
     const util_endpoints_2 = __webpack_require__(9674);
     const ruleset_1 = __webpack_require__(1308);
     const cache = new util_endpoints_2.EndpointCache({
@@ -280,22 +280,21 @@ exports.modules = {
   },
 
   /***/ 2054: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
-    var middlewareHostHeader = __webpack_require__(2590);
-    var middlewareLogger = __webpack_require__(5242);
-    var middlewareRecursionDetection = __webpack_require__(1568);
+    var middlewareHostHeader = __webpack_require__(4598);
+    var middlewareLogger = __webpack_require__(7458);
+    var middlewareRecursionDetection = __webpack_require__(7240);
     var middlewareUserAgent = __webpack_require__(2959);
     var configResolver = __webpack_require__(9316);
     var core = __webpack_require__(402);
+    var schema = __webpack_require__(6890);
     var middlewareContentLength = __webpack_require__(7212);
     var middlewareEndpoint = __webpack_require__(99);
     var middlewareRetry = __webpack_require__(9618);
     var smithyClient = __webpack_require__(1411);
     var httpAuthSchemeProvider = __webpack_require__(2041);
     var runtimeConfig = __webpack_require__(2696);
-    var regionConfigResolver = __webpack_require__(6463);
+    var regionConfigResolver = __webpack_require__(4775);
     var protocolHttp = __webpack_require__(2356);
-    var middlewareSerde = __webpack_require__(3255);
-    var core$1 = __webpack_require__(8704);
 
     const resolveClientEndpointParameters = (options) => {
       return Object.assign(options, {
@@ -392,6 +391,7 @@ exports.modules = {
           configuration?.extensions || [],
         );
         this.config = _config_8;
+        this.middlewareStack.use(schema.getSchemaSerdePlugin(this.config));
         this.middlewareStack.use(
           middlewareUserAgent.getUserAgentPlugin(this.config),
         );
@@ -423,14 +423,14 @@ exports.modules = {
       }
     }
 
-    class SSOServiceException extends smithyClient.ServiceException {
+    let SSOServiceException$1 = class SSOServiceException extends smithyClient.ServiceException {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, SSOServiceException.prototype);
       }
-    }
+    };
 
-    class InvalidRequestException extends SSOServiceException {
+    let InvalidRequestException$1 = class InvalidRequestException extends SSOServiceException$1 {
       name = "InvalidRequestException";
       $fault = "client";
       constructor(opts) {
@@ -441,8 +441,8 @@ exports.modules = {
         });
         Object.setPrototypeOf(this, InvalidRequestException.prototype);
       }
-    }
-    class ResourceNotFoundException extends SSOServiceException {
+    };
+    let ResourceNotFoundException$1 = class ResourceNotFoundException extends SSOServiceException$1 {
       name = "ResourceNotFoundException";
       $fault = "client";
       constructor(opts) {
@@ -453,8 +453,8 @@ exports.modules = {
         });
         Object.setPrototypeOf(this, ResourceNotFoundException.prototype);
       }
-    }
-    class TooManyRequestsException extends SSOServiceException {
+    };
+    let TooManyRequestsException$1 = class TooManyRequestsException extends SSOServiceException$1 {
       name = "TooManyRequestsException";
       $fault = "client";
       constructor(opts) {
@@ -465,8 +465,8 @@ exports.modules = {
         });
         Object.setPrototypeOf(this, TooManyRequestsException.prototype);
       }
-    }
-    class UnauthorizedException extends SSOServiceException {
+    };
+    let UnauthorizedException$1 = class UnauthorizedException extends SSOServiceException$1 {
       name = "UnauthorizedException";
       $fault = "client";
       constructor(opts) {
@@ -477,298 +477,311 @@ exports.modules = {
         });
         Object.setPrototypeOf(this, UnauthorizedException.prototype);
       }
-    }
-    const GetRoleCredentialsRequestFilterSensitiveLog = (obj) => ({
-      ...obj,
-      ...(obj.accessToken && { accessToken: smithyClient.SENSITIVE_STRING }),
-    });
-    const RoleCredentialsFilterSensitiveLog = (obj) => ({
-      ...obj,
-      ...(obj.secretAccessKey && {
-        secretAccessKey: smithyClient.SENSITIVE_STRING,
-      }),
-      ...(obj.sessionToken && { sessionToken: smithyClient.SENSITIVE_STRING }),
-    });
-    const GetRoleCredentialsResponseFilterSensitiveLog = (obj) => ({
-      ...obj,
-      ...(obj.roleCredentials && {
-        roleCredentials: RoleCredentialsFilterSensitiveLog(obj.roleCredentials),
-      }),
-    });
-    const ListAccountRolesRequestFilterSensitiveLog = (obj) => ({
-      ...obj,
-      ...(obj.accessToken && { accessToken: smithyClient.SENSITIVE_STRING }),
-    });
-    const ListAccountsRequestFilterSensitiveLog = (obj) => ({
-      ...obj,
-      ...(obj.accessToken && { accessToken: smithyClient.SENSITIVE_STRING }),
-    });
-    const LogoutRequestFilterSensitiveLog = (obj) => ({
-      ...obj,
-      ...(obj.accessToken && { accessToken: smithyClient.SENSITIVE_STRING }),
-    });
+    };
 
-    const se_GetRoleCredentialsCommand = async (input, context) => {
-      const b = core.requestBuilder(input, context);
-      const headers = smithyClient.map(
-        {},
-        smithyClient.isSerializableHeaderValue,
-        {
-          [_xasbt]: input[_aT],
-        },
-      );
-      b.bp("/federation/credentials");
-      const query = smithyClient.map({
-        [_rn]: [, smithyClient.expectNonNull(input[_rN], `roleName`)],
-        [_ai]: [, smithyClient.expectNonNull(input[_aI], `accountId`)],
-      });
-      let body;
-      b.m("GET").h(headers).q(query).b(body);
-      return b.build();
-    };
-    const se_ListAccountRolesCommand = async (input, context) => {
-      const b = core.requestBuilder(input, context);
-      const headers = smithyClient.map(
-        {},
-        smithyClient.isSerializableHeaderValue,
-        {
-          [_xasbt]: input[_aT],
-        },
-      );
-      b.bp("/assignment/roles");
-      const query = smithyClient.map({
-        [_nt]: [, input[_nT]],
-        [_mr]: [() => input.maxResults !== void 0, () => input[_mR].toString()],
-        [_ai]: [, smithyClient.expectNonNull(input[_aI], `accountId`)],
-      });
-      let body;
-      b.m("GET").h(headers).q(query).b(body);
-      return b.build();
-    };
-    const se_ListAccountsCommand = async (input, context) => {
-      const b = core.requestBuilder(input, context);
-      const headers = smithyClient.map(
-        {},
-        smithyClient.isSerializableHeaderValue,
-        {
-          [_xasbt]: input[_aT],
-        },
-      );
-      b.bp("/assignment/accounts");
-      const query = smithyClient.map({
-        [_nt]: [, input[_nT]],
-        [_mr]: [() => input.maxResults !== void 0, () => input[_mR].toString()],
-      });
-      let body;
-      b.m("GET").h(headers).q(query).b(body);
-      return b.build();
-    };
-    const se_LogoutCommand = async (input, context) => {
-      const b = core.requestBuilder(input, context);
-      const headers = smithyClient.map(
-        {},
-        smithyClient.isSerializableHeaderValue,
-        {
-          [_xasbt]: input[_aT],
-        },
-      );
-      b.bp("/logout");
-      let body;
-      b.m("POST").h(headers).b(body);
-      return b.build();
-    };
-    const de_GetRoleCredentialsCommand = async (output, context) => {
-      if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context);
-      }
-      const contents = smithyClient.map({
-        $metadata: deserializeMetadata(output),
-      });
-      const data = smithyClient.expectNonNull(
-        smithyClient.expectObject(
-          await core$1.parseJsonBody(output.body, context),
-        ),
-        "body",
-      );
-      const doc = smithyClient.take(data, {
-        roleCredentials: smithyClient._json,
-      });
-      Object.assign(contents, doc);
-      return contents;
-    };
-    const de_ListAccountRolesCommand = async (output, context) => {
-      if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context);
-      }
-      const contents = smithyClient.map({
-        $metadata: deserializeMetadata(output),
-      });
-      const data = smithyClient.expectNonNull(
-        smithyClient.expectObject(
-          await core$1.parseJsonBody(output.body, context),
-        ),
-        "body",
-      );
-      const doc = smithyClient.take(data, {
-        nextToken: smithyClient.expectString,
-        roleList: smithyClient._json,
-      });
-      Object.assign(contents, doc);
-      return contents;
-    };
-    const de_ListAccountsCommand = async (output, context) => {
-      if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context);
-      }
-      const contents = smithyClient.map({
-        $metadata: deserializeMetadata(output),
-      });
-      const data = smithyClient.expectNonNull(
-        smithyClient.expectObject(
-          await core$1.parseJsonBody(output.body, context),
-        ),
-        "body",
-      );
-      const doc = smithyClient.take(data, {
-        accountList: smithyClient._json,
-        nextToken: smithyClient.expectString,
-      });
-      Object.assign(contents, doc);
-      return contents;
-    };
-    const de_LogoutCommand = async (output, context) => {
-      if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context);
-      }
-      const contents = smithyClient.map({
-        $metadata: deserializeMetadata(output),
-      });
-      await smithyClient.collectBody(output.body, context);
-      return contents;
-    };
-    const de_CommandError = async (output, context) => {
-      const parsedOutput = {
-        ...output,
-        body: await core$1.parseJsonErrorBody(output.body, context),
-      };
-      const errorCode = core$1.loadRestJsonErrorCode(output, parsedOutput.body);
-      switch (errorCode) {
-        case "InvalidRequestException":
-        case "com.amazonaws.sso#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput);
-        case "ResourceNotFoundException":
-        case "com.amazonaws.sso#ResourceNotFoundException":
-          throw await de_ResourceNotFoundExceptionRes(parsedOutput);
-        case "TooManyRequestsException":
-        case "com.amazonaws.sso#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput);
-        case "UnauthorizedException":
-        case "com.amazonaws.sso#UnauthorizedException":
-          throw await de_UnauthorizedExceptionRes(parsedOutput);
-        default:
-          const parsedBody = parsedOutput.body;
-          return throwDefaultError({
-            output,
-            parsedBody,
-            errorCode,
-          });
-      }
-    };
-    const throwDefaultError =
-      smithyClient.withBaseException(SSOServiceException);
-    const de_InvalidRequestExceptionRes = async (parsedOutput, context) => {
-      const contents = smithyClient.map({});
-      const data = parsedOutput.body;
-      const doc = smithyClient.take(data, {
-        message: smithyClient.expectString,
-      });
-      Object.assign(contents, doc);
-      const exception = new InvalidRequestException({
-        $metadata: deserializeMetadata(parsedOutput),
-        ...contents,
-      });
-      return smithyClient.decorateServiceException(
-        exception,
-        parsedOutput.body,
-      );
-    };
-    const de_ResourceNotFoundExceptionRes = async (parsedOutput, context) => {
-      const contents = smithyClient.map({});
-      const data = parsedOutput.body;
-      const doc = smithyClient.take(data, {
-        message: smithyClient.expectString,
-      });
-      Object.assign(contents, doc);
-      const exception = new ResourceNotFoundException({
-        $metadata: deserializeMetadata(parsedOutput),
-        ...contents,
-      });
-      return smithyClient.decorateServiceException(
-        exception,
-        parsedOutput.body,
-      );
-    };
-    const de_TooManyRequestsExceptionRes = async (parsedOutput, context) => {
-      const contents = smithyClient.map({});
-      const data = parsedOutput.body;
-      const doc = smithyClient.take(data, {
-        message: smithyClient.expectString,
-      });
-      Object.assign(contents, doc);
-      const exception = new TooManyRequestsException({
-        $metadata: deserializeMetadata(parsedOutput),
-        ...contents,
-      });
-      return smithyClient.decorateServiceException(
-        exception,
-        parsedOutput.body,
-      );
-    };
-    const de_UnauthorizedExceptionRes = async (parsedOutput, context) => {
-      const contents = smithyClient.map({});
-      const data = parsedOutput.body;
-      const doc = smithyClient.take(data, {
-        message: smithyClient.expectString,
-      });
-      Object.assign(contents, doc);
-      const exception = new UnauthorizedException({
-        $metadata: deserializeMetadata(parsedOutput),
-        ...contents,
-      });
-      return smithyClient.decorateServiceException(
-        exception,
-        parsedOutput.body,
-      );
-    };
-    const deserializeMetadata = (output) => ({
-      httpStatusCode: output.statusCode,
-      requestId:
-        output.headers["x-amzn-requestid"] ??
-        output.headers["x-amzn-request-id"] ??
-        output.headers["x-amz-request-id"],
-      extendedRequestId: output.headers["x-amz-id-2"],
-      cfId: output.headers["x-amz-cf-id"],
-    });
+    const _AI = "AccountInfo";
+    const _ALT = "AccountListType";
+    const _ATT = "AccessTokenType";
+    const _GRC = "GetRoleCredentials";
+    const _GRCR = "GetRoleCredentialsRequest";
+    const _GRCRe = "GetRoleCredentialsResponse";
+    const _IRE = "InvalidRequestException";
+    const _L = "Logout";
+    const _LA = "ListAccounts";
+    const _LAR = "ListAccountsRequest";
+    const _LARR = "ListAccountRolesRequest";
+    const _LARRi = "ListAccountRolesResponse";
+    const _LARi = "ListAccountsResponse";
+    const _LARis = "ListAccountRoles";
+    const _LR = "LogoutRequest";
+    const _RC = "RoleCredentials";
+    const _RI = "RoleInfo";
+    const _RLT = "RoleListType";
+    const _RNFE = "ResourceNotFoundException";
+    const _SAKT = "SecretAccessKeyType";
+    const _STT = "SessionTokenType";
+    const _TMRE = "TooManyRequestsException";
+    const _UE = "UnauthorizedException";
     const _aI = "accountId";
+    const _aKI = "accessKeyId";
+    const _aL = "accountList";
+    const _aN = "accountName";
     const _aT = "accessToken";
     const _ai = "account_id";
+    const _c = "client";
+    const _e = "error";
+    const _eA = "emailAddress";
+    const _ex = "expiration";
+    const _h = "http";
+    const _hE = "httpError";
+    const _hH = "httpHeader";
+    const _hQ = "httpQuery";
+    const _m = "message";
     const _mR = "maxResults";
     const _mr = "max_result";
     const _nT = "nextToken";
     const _nt = "next_token";
+    const _rC = "roleCredentials";
+    const _rL = "roleList";
     const _rN = "roleName";
     const _rn = "role_name";
+    const _s = "smithy.ts.sdk.synthetic.com.amazonaws.sso";
+    const _sAK = "secretAccessKey";
+    const _sT = "sessionToken";
     const _xasbt = "x-amz-sso_bearer_token";
+    const n0 = "com.amazonaws.sso";
+    var AccessTokenType = [0, n0, _ATT, 8, 0];
+    var SecretAccessKeyType = [0, n0, _SAKT, 8, 0];
+    var SessionTokenType = [0, n0, _STT, 8, 0];
+    var AccountInfo = [3, n0, _AI, 0, [_aI, _aN, _eA], [0, 0, 0]];
+    var GetRoleCredentialsRequest = [
+      3,
+      n0,
+      _GRCR,
+      0,
+      [_rN, _aI, _aT],
+      [
+        [
+          0,
+          {
+            [_hQ]: _rn,
+          },
+        ],
+        [
+          0,
+          {
+            [_hQ]: _ai,
+          },
+        ],
+        [
+          () => AccessTokenType,
+          {
+            [_hH]: _xasbt,
+          },
+        ],
+      ],
+    ];
+    var GetRoleCredentialsResponse = [
+      3,
+      n0,
+      _GRCRe,
+      0,
+      [_rC],
+      [[() => RoleCredentials, 0]],
+    ];
+    var InvalidRequestException = [
+      -3,
+      n0,
+      _IRE,
+      {
+        [_e]: _c,
+        [_hE]: 400,
+      },
+      [_m],
+      [0],
+    ];
+    schema.TypeRegistry.for(n0).registerError(
+      InvalidRequestException,
+      InvalidRequestException$1,
+    );
+    var ListAccountRolesRequest = [
+      3,
+      n0,
+      _LARR,
+      0,
+      [_nT, _mR, _aT, _aI],
+      [
+        [
+          0,
+          {
+            [_hQ]: _nt,
+          },
+        ],
+        [
+          1,
+          {
+            [_hQ]: _mr,
+          },
+        ],
+        [
+          () => AccessTokenType,
+          {
+            [_hH]: _xasbt,
+          },
+        ],
+        [
+          0,
+          {
+            [_hQ]: _ai,
+          },
+        ],
+      ],
+    ];
+    var ListAccountRolesResponse = [
+      3,
+      n0,
+      _LARRi,
+      0,
+      [_nT, _rL],
+      [0, () => RoleListType],
+    ];
+    var ListAccountsRequest = [
+      3,
+      n0,
+      _LAR,
+      0,
+      [_nT, _mR, _aT],
+      [
+        [
+          0,
+          {
+            [_hQ]: _nt,
+          },
+        ],
+        [
+          1,
+          {
+            [_hQ]: _mr,
+          },
+        ],
+        [
+          () => AccessTokenType,
+          {
+            [_hH]: _xasbt,
+          },
+        ],
+      ],
+    ];
+    var ListAccountsResponse = [
+      3,
+      n0,
+      _LARi,
+      0,
+      [_nT, _aL],
+      [0, () => AccountListType],
+    ];
+    var LogoutRequest = [
+      3,
+      n0,
+      _LR,
+      0,
+      [_aT],
+      [
+        [
+          () => AccessTokenType,
+          {
+            [_hH]: _xasbt,
+          },
+        ],
+      ],
+    ];
+    var ResourceNotFoundException = [
+      -3,
+      n0,
+      _RNFE,
+      {
+        [_e]: _c,
+        [_hE]: 404,
+      },
+      [_m],
+      [0],
+    ];
+    schema.TypeRegistry.for(n0).registerError(
+      ResourceNotFoundException,
+      ResourceNotFoundException$1,
+    );
+    var RoleCredentials = [
+      3,
+      n0,
+      _RC,
+      0,
+      [_aKI, _sAK, _sT, _ex],
+      [0, [() => SecretAccessKeyType, 0], [() => SessionTokenType, 0], 1],
+    ];
+    var RoleInfo = [3, n0, _RI, 0, [_rN, _aI], [0, 0]];
+    var TooManyRequestsException = [
+      -3,
+      n0,
+      _TMRE,
+      {
+        [_e]: _c,
+        [_hE]: 429,
+      },
+      [_m],
+      [0],
+    ];
+    schema.TypeRegistry.for(n0).registerError(
+      TooManyRequestsException,
+      TooManyRequestsException$1,
+    );
+    var UnauthorizedException = [
+      -3,
+      n0,
+      _UE,
+      {
+        [_e]: _c,
+        [_hE]: 401,
+      },
+      [_m],
+      [0],
+    ];
+    schema.TypeRegistry.for(n0).registerError(
+      UnauthorizedException,
+      UnauthorizedException$1,
+    );
+    var __Unit = "unit";
+    var SSOServiceException = [-3, _s, "SSOServiceException", 0, [], []];
+    schema.TypeRegistry.for(_s).registerError(
+      SSOServiceException,
+      SSOServiceException$1,
+    );
+    var AccountListType = [1, n0, _ALT, 0, () => AccountInfo];
+    var RoleListType = [1, n0, _RLT, 0, () => RoleInfo];
+    var GetRoleCredentials = [
+      9,
+      n0,
+      _GRC,
+      {
+        [_h]: ["GET", "/federation/credentials", 200],
+      },
+      () => GetRoleCredentialsRequest,
+      () => GetRoleCredentialsResponse,
+    ];
+    var ListAccountRoles = [
+      9,
+      n0,
+      _LARis,
+      {
+        [_h]: ["GET", "/assignment/roles", 200],
+      },
+      () => ListAccountRolesRequest,
+      () => ListAccountRolesResponse,
+    ];
+    var ListAccounts = [
+      9,
+      n0,
+      _LA,
+      {
+        [_h]: ["GET", "/assignment/accounts", 200],
+      },
+      () => ListAccountsRequest,
+      () => ListAccountsResponse,
+    ];
+    var Logout = [
+      9,
+      n0,
+      _L,
+      {
+        [_h]: ["POST", "/logout", 200],
+      },
+      () => LogoutRequest,
+      () => __Unit,
+    ];
 
     class GetRoleCredentialsCommand extends smithyClient.Command.classBuilder()
       .ep(commonParams)
       .m(function (Command, cs, config, o) {
         return [
-          middlewareSerde.getSerdePlugin(
-            config,
-            this.serialize,
-            this.deserialize,
-          ),
           middlewareEndpoint.getEndpointPlugin(
             config,
             Command.getEndpointParameterInstructions(),
@@ -777,23 +790,13 @@ exports.modules = {
       })
       .s("SWBPortalService", "GetRoleCredentials", {})
       .n("SSOClient", "GetRoleCredentialsCommand")
-      .f(
-        GetRoleCredentialsRequestFilterSensitiveLog,
-        GetRoleCredentialsResponseFilterSensitiveLog,
-      )
-      .ser(se_GetRoleCredentialsCommand)
-      .de(de_GetRoleCredentialsCommand)
+      .sc(GetRoleCredentials)
       .build() {}
 
     class ListAccountRolesCommand extends smithyClient.Command.classBuilder()
       .ep(commonParams)
       .m(function (Command, cs, config, o) {
         return [
-          middlewareSerde.getSerdePlugin(
-            config,
-            this.serialize,
-            this.deserialize,
-          ),
           middlewareEndpoint.getEndpointPlugin(
             config,
             Command.getEndpointParameterInstructions(),
@@ -802,20 +805,13 @@ exports.modules = {
       })
       .s("SWBPortalService", "ListAccountRoles", {})
       .n("SSOClient", "ListAccountRolesCommand")
-      .f(ListAccountRolesRequestFilterSensitiveLog, void 0)
-      .ser(se_ListAccountRolesCommand)
-      .de(de_ListAccountRolesCommand)
+      .sc(ListAccountRoles)
       .build() {}
 
     class ListAccountsCommand extends smithyClient.Command.classBuilder()
       .ep(commonParams)
       .m(function (Command, cs, config, o) {
         return [
-          middlewareSerde.getSerdePlugin(
-            config,
-            this.serialize,
-            this.deserialize,
-          ),
           middlewareEndpoint.getEndpointPlugin(
             config,
             Command.getEndpointParameterInstructions(),
@@ -824,20 +820,13 @@ exports.modules = {
       })
       .s("SWBPortalService", "ListAccounts", {})
       .n("SSOClient", "ListAccountsCommand")
-      .f(ListAccountsRequestFilterSensitiveLog, void 0)
-      .ser(se_ListAccountsCommand)
-      .de(de_ListAccountsCommand)
+      .sc(ListAccounts)
       .build() {}
 
     class LogoutCommand extends smithyClient.Command.classBuilder()
       .ep(commonParams)
       .m(function (Command, cs, config, o) {
         return [
-          middlewareSerde.getSerdePlugin(
-            config,
-            this.serialize,
-            this.deserialize,
-          ),
           middlewareEndpoint.getEndpointPlugin(
             config,
             Command.getEndpointParameterInstructions(),
@@ -846,9 +835,7 @@ exports.modules = {
       })
       .s("SWBPortalService", "Logout", {})
       .n("SSOClient", "LogoutCommand")
-      .f(LogoutRequestFilterSensitiveLog, void 0)
-      .ser(se_LogoutCommand)
-      .de(de_LogoutCommand)
+      .sc(Logout)
       .build() {}
 
     const commands = {
@@ -889,27 +876,16 @@ exports.modules = {
       },
     });
     exports.GetRoleCredentialsCommand = GetRoleCredentialsCommand;
-    exports.GetRoleCredentialsRequestFilterSensitiveLog =
-      GetRoleCredentialsRequestFilterSensitiveLog;
-    exports.GetRoleCredentialsResponseFilterSensitiveLog =
-      GetRoleCredentialsResponseFilterSensitiveLog;
-    exports.InvalidRequestException = InvalidRequestException;
+    exports.InvalidRequestException = InvalidRequestException$1;
     exports.ListAccountRolesCommand = ListAccountRolesCommand;
-    exports.ListAccountRolesRequestFilterSensitiveLog =
-      ListAccountRolesRequestFilterSensitiveLog;
     exports.ListAccountsCommand = ListAccountsCommand;
-    exports.ListAccountsRequestFilterSensitiveLog =
-      ListAccountsRequestFilterSensitiveLog;
     exports.LogoutCommand = LogoutCommand;
-    exports.LogoutRequestFilterSensitiveLog = LogoutRequestFilterSensitiveLog;
-    exports.ResourceNotFoundException = ResourceNotFoundException;
-    exports.RoleCredentialsFilterSensitiveLog =
-      RoleCredentialsFilterSensitiveLog;
+    exports.ResourceNotFoundException = ResourceNotFoundException$1;
     exports.SSO = SSO;
     exports.SSOClient = SSOClient;
-    exports.SSOServiceException = SSOServiceException;
-    exports.TooManyRequestsException = TooManyRequestsException;
-    exports.UnauthorizedException = UnauthorizedException;
+    exports.SSOServiceException = SSOServiceException$1;
+    exports.TooManyRequestsException = TooManyRequestsException$1;
+    exports.UnauthorizedException = UnauthorizedException$1;
     exports.paginateListAccountRoles = paginateListAccountRoles;
     exports.paginateListAccounts = paginateListAccounts;
 
@@ -1029,6 +1005,7 @@ exports.modules = {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getRuntimeConfig = void 0;
     const core_1 = __webpack_require__(8704);
+    const protocols_1 = __webpack_require__(7288);
     const core_2 = __webpack_require__(402);
     const smithy_client_1 = __webpack_require__(1411);
     const url_parser_1 = __webpack_require__(4494);
@@ -1065,6 +1042,11 @@ exports.modules = {
           },
         ],
         logger: config?.logger ?? new smithy_client_1.NoOpLogger(),
+        protocol:
+          config?.protocol ??
+          new protocols_1.AwsRestJsonProtocol({
+            defaultNamespace: "com.amazonaws.sso",
+          }),
         serviceId: config?.serviceId ?? "SSO",
         urlParser: config?.urlParser ?? url_parser_1.parseUrl,
         utf8Decoder: config?.utf8Decoder ?? util_utf8_1.fromUtf8,
@@ -1072,6 +1054,746 @@ exports.modules = {
       };
     };
     exports.getRuntimeConfig = getRuntimeConfig;
+
+    /***/
+  },
+
+  /***/ 4598: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    var protocolHttp = __webpack_require__(2356);
+
+    function resolveHostHeaderConfig(input) {
+      return input;
+    }
+    const hostHeaderMiddleware = (options) => (next) => async (args) => {
+      if (!protocolHttp.HttpRequest.isInstance(args.request)) return next(args);
+      const { request } = args;
+      const { handlerProtocol = "" } = options.requestHandler.metadata || {};
+      if (
+        handlerProtocol.indexOf("h2") >= 0 &&
+        !request.headers[":authority"]
+      ) {
+        delete request.headers["host"];
+        request.headers[":authority"] =
+          request.hostname + (request.port ? ":" + request.port : "");
+      } else if (!request.headers["host"]) {
+        let host = request.hostname;
+        if (request.port != null) host += `:${request.port}`;
+        request.headers["host"] = host;
+      }
+      return next(args);
+    };
+    const hostHeaderMiddlewareOptions = {
+      name: "hostHeaderMiddleware",
+      step: "build",
+      priority: "low",
+      tags: ["HOST"],
+      override: true,
+    };
+    const getHostHeaderPlugin = (options) => ({
+      applyToStack: (clientStack) => {
+        clientStack.add(
+          hostHeaderMiddleware(options),
+          hostHeaderMiddlewareOptions,
+        );
+      },
+    });
+
+    exports.getHostHeaderPlugin = getHostHeaderPlugin;
+    exports.hostHeaderMiddleware = hostHeaderMiddleware;
+    exports.hostHeaderMiddlewareOptions = hostHeaderMiddlewareOptions;
+    exports.resolveHostHeaderConfig = resolveHostHeaderConfig;
+
+    /***/
+  },
+
+  /***/ 7458: /***/ (__unused_webpack_module, exports) => {
+    const loggerMiddleware = () => (next, context) => async (args) => {
+      try {
+        const response = await next(args);
+        const {
+          clientName,
+          commandName,
+          logger,
+          dynamoDbDocumentClientOptions = {},
+        } = context;
+        const {
+          overrideInputFilterSensitiveLog,
+          overrideOutputFilterSensitiveLog,
+        } = dynamoDbDocumentClientOptions;
+        const inputFilterSensitiveLog =
+          overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
+        const outputFilterSensitiveLog =
+          overrideOutputFilterSensitiveLog ?? context.outputFilterSensitiveLog;
+        const { $metadata, ...outputWithoutMetadata } = response.output;
+        logger?.info?.({
+          clientName,
+          commandName,
+          input: inputFilterSensitiveLog(args.input),
+          output: outputFilterSensitiveLog(outputWithoutMetadata),
+          metadata: $metadata,
+        });
+        return response;
+      } catch (error) {
+        const {
+          clientName,
+          commandName,
+          logger,
+          dynamoDbDocumentClientOptions = {},
+        } = context;
+        const { overrideInputFilterSensitiveLog } =
+          dynamoDbDocumentClientOptions;
+        const inputFilterSensitiveLog =
+          overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
+        logger?.error?.({
+          clientName,
+          commandName,
+          input: inputFilterSensitiveLog(args.input),
+          error,
+          metadata: error.$metadata,
+        });
+        throw error;
+      }
+    };
+    const loggerMiddlewareOptions = {
+      name: "loggerMiddleware",
+      tags: ["LOGGER"],
+      step: "initialize",
+      override: true,
+    };
+    const getLoggerPlugin = (options) => ({
+      applyToStack: (clientStack) => {
+        clientStack.add(loggerMiddleware(), loggerMiddlewareOptions);
+      },
+    });
+
+    exports.getLoggerPlugin = getLoggerPlugin;
+    exports.loggerMiddleware = loggerMiddleware;
+    exports.loggerMiddlewareOptions = loggerMiddlewareOptions;
+
+    /***/
+  },
+
+  /***/ 7240: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    var recursionDetectionMiddleware = __webpack_require__(1617);
+
+    const recursionDetectionMiddlewareOptions = {
+      step: "build",
+      tags: ["RECURSION_DETECTION"],
+      name: "recursionDetectionMiddleware",
+      override: true,
+      priority: "low",
+    };
+
+    const getRecursionDetectionPlugin = (options) => ({
+      applyToStack: (clientStack) => {
+        clientStack.add(
+          recursionDetectionMiddleware.recursionDetectionMiddleware(),
+          recursionDetectionMiddlewareOptions,
+        );
+      },
+    });
+
+    exports.getRecursionDetectionPlugin = getRecursionDetectionPlugin;
+    Object.keys(recursionDetectionMiddleware).forEach(function (k) {
+      if (k !== "default" && !Object.prototype.hasOwnProperty.call(exports, k))
+        Object.defineProperty(exports, k, {
+          enumerable: true,
+          get: function () {
+            return recursionDetectionMiddleware[k];
+          },
+        });
+    });
+
+    /***/
+  },
+
+  /***/ 1617: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.recursionDetectionMiddleware = void 0;
+    const lambda_invoke_store_1 = __webpack_require__(9320);
+    const protocol_http_1 = __webpack_require__(2356);
+    const TRACE_ID_HEADER_NAME = "X-Amzn-Trace-Id";
+    const ENV_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME";
+    const ENV_TRACE_ID = "_X_AMZN_TRACE_ID";
+    const recursionDetectionMiddleware = () => (next) => async (args) => {
+      const { request } = args;
+      if (!protocol_http_1.HttpRequest.isInstance(request)) {
+        return next(args);
+      }
+      const traceIdHeader =
+        Object.keys(request.headers ?? {}).find(
+          (h) => h.toLowerCase() === TRACE_ID_HEADER_NAME.toLowerCase(),
+        ) ?? TRACE_ID_HEADER_NAME;
+      if (request.headers.hasOwnProperty(traceIdHeader)) {
+        return next(args);
+      }
+      const functionName = process.env[ENV_LAMBDA_FUNCTION_NAME];
+      const traceIdFromEnv = process.env[ENV_TRACE_ID];
+      const invokeStore =
+        await lambda_invoke_store_1.InvokeStore.getInstanceAsync();
+      const traceIdFromInvokeStore = invokeStore?.getXRayTraceId();
+      const traceId = traceIdFromInvokeStore ?? traceIdFromEnv;
+      const nonEmptyString = (str) => typeof str === "string" && str.length > 0;
+      if (nonEmptyString(functionName) && nonEmptyString(traceId)) {
+        request.headers[TRACE_ID_HEADER_NAME] = traceId;
+      }
+      return next({
+        ...args,
+        request,
+      });
+    };
+    exports.recursionDetectionMiddleware = recursionDetectionMiddleware;
+
+    /***/
+  },
+
+  /***/ 4775: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    var configResolver = __webpack_require__(9316);
+    var stsRegionDefaultResolver = __webpack_require__(3003);
+
+    const getAwsRegionExtensionConfiguration = (runtimeConfig) => {
+      return {
+        setRegion(region) {
+          runtimeConfig.region = region;
+        },
+        region() {
+          return runtimeConfig.region;
+        },
+      };
+    };
+    const resolveAwsRegionExtensionConfiguration = (
+      awsRegionExtensionConfiguration,
+    ) => {
+      return {
+        region: awsRegionExtensionConfiguration.region(),
+      };
+    };
+
+    Object.defineProperty(exports, "NODE_REGION_CONFIG_FILE_OPTIONS", {
+      enumerable: true,
+      get: function () {
+        return configResolver.NODE_REGION_CONFIG_FILE_OPTIONS;
+      },
+    });
+    Object.defineProperty(exports, "NODE_REGION_CONFIG_OPTIONS", {
+      enumerable: true,
+      get: function () {
+        return configResolver.NODE_REGION_CONFIG_OPTIONS;
+      },
+    });
+    Object.defineProperty(exports, "REGION_ENV_NAME", {
+      enumerable: true,
+      get: function () {
+        return configResolver.REGION_ENV_NAME;
+      },
+    });
+    Object.defineProperty(exports, "REGION_INI_NAME", {
+      enumerable: true,
+      get: function () {
+        return configResolver.REGION_INI_NAME;
+      },
+    });
+    Object.defineProperty(exports, "resolveRegionConfig", {
+      enumerable: true,
+      get: function () {
+        return configResolver.resolveRegionConfig;
+      },
+    });
+    exports.getAwsRegionExtensionConfiguration =
+      getAwsRegionExtensionConfiguration;
+    exports.resolveAwsRegionExtensionConfiguration =
+      resolveAwsRegionExtensionConfiguration;
+    Object.keys(stsRegionDefaultResolver).forEach(function (k) {
+      if (k !== "default" && !Object.prototype.hasOwnProperty.call(exports, k))
+        Object.defineProperty(exports, k, {
+          enumerable: true,
+          get: function () {
+            return stsRegionDefaultResolver[k];
+          },
+        });
+    });
+
+    /***/
+  },
+
+  /***/ 3003: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.warning = void 0;
+    exports.stsRegionDefaultResolver = stsRegionDefaultResolver;
+    const config_resolver_1 = __webpack_require__(9316);
+    const node_config_provider_1 = __webpack_require__(5704);
+    function stsRegionDefaultResolver(loaderConfig = {}) {
+      return (0, node_config_provider_1.loadConfig)(
+        {
+          ...config_resolver_1.NODE_REGION_CONFIG_OPTIONS,
+          async default() {
+            if (!exports.warning.silence) {
+              console.warn(
+                "@aws-sdk - WARN - default STS region of us-east-1 used. See @aws-sdk/credential-providers README and set a region explicitly.",
+              );
+            }
+            return "us-east-1";
+          },
+        },
+        {
+          ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS,
+          ...loaderConfig,
+        },
+      );
+    }
+    exports.warning = {
+      silence: false,
+    };
+
+    /***/
+  },
+
+  /***/ 3956: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    var utilEndpoints = __webpack_require__(9674);
+    var urlParser = __webpack_require__(4494);
+
+    const isVirtualHostableS3Bucket = (value, allowSubDomains = false) => {
+      if (allowSubDomains) {
+        for (const label of value.split(".")) {
+          if (!isVirtualHostableS3Bucket(label)) {
+            return false;
+          }
+        }
+        return true;
+      }
+      if (!utilEndpoints.isValidHostLabel(value)) {
+        return false;
+      }
+      if (value.length < 3 || value.length > 63) {
+        return false;
+      }
+      if (value !== value.toLowerCase()) {
+        return false;
+      }
+      if (utilEndpoints.isIpAddress(value)) {
+        return false;
+      }
+      return true;
+    };
+
+    const ARN_DELIMITER = ":";
+    const RESOURCE_DELIMITER = "/";
+    const parseArn = (value) => {
+      const segments = value.split(ARN_DELIMITER);
+      if (segments.length < 6) return null;
+      const [arn, partition, service, region, accountId, ...resourcePath] =
+        segments;
+      if (
+        arn !== "arn" ||
+        partition === "" ||
+        service === "" ||
+        resourcePath.join(ARN_DELIMITER) === ""
+      )
+        return null;
+      const resourceId = resourcePath
+        .map((resource) => resource.split(RESOURCE_DELIMITER))
+        .flat();
+      return {
+        partition,
+        service,
+        region,
+        accountId,
+        resourceId,
+      };
+    };
+
+    var partitions = [
+      {
+        id: "aws",
+        outputs: {
+          dnsSuffix: "amazonaws.com",
+          dualStackDnsSuffix: "api.aws",
+          implicitGlobalRegion: "us-east-1",
+          name: "aws",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^(us|eu|ap|sa|ca|me|af|il|mx)\\-\\w+\\-\\d+$",
+        regions: {
+          "af-south-1": {
+            description: "Africa (Cape Town)",
+          },
+          "ap-east-1": {
+            description: "Asia Pacific (Hong Kong)",
+          },
+          "ap-east-2": {
+            description: "Asia Pacific (Taipei)",
+          },
+          "ap-northeast-1": {
+            description: "Asia Pacific (Tokyo)",
+          },
+          "ap-northeast-2": {
+            description: "Asia Pacific (Seoul)",
+          },
+          "ap-northeast-3": {
+            description: "Asia Pacific (Osaka)",
+          },
+          "ap-south-1": {
+            description: "Asia Pacific (Mumbai)",
+          },
+          "ap-south-2": {
+            description: "Asia Pacific (Hyderabad)",
+          },
+          "ap-southeast-1": {
+            description: "Asia Pacific (Singapore)",
+          },
+          "ap-southeast-2": {
+            description: "Asia Pacific (Sydney)",
+          },
+          "ap-southeast-3": {
+            description: "Asia Pacific (Jakarta)",
+          },
+          "ap-southeast-4": {
+            description: "Asia Pacific (Melbourne)",
+          },
+          "ap-southeast-5": {
+            description: "Asia Pacific (Malaysia)",
+          },
+          "ap-southeast-6": {
+            description: "Asia Pacific (New Zealand)",
+          },
+          "ap-southeast-7": {
+            description: "Asia Pacific (Thailand)",
+          },
+          "aws-global": {
+            description: "aws global region",
+          },
+          "ca-central-1": {
+            description: "Canada (Central)",
+          },
+          "ca-west-1": {
+            description: "Canada West (Calgary)",
+          },
+          "eu-central-1": {
+            description: "Europe (Frankfurt)",
+          },
+          "eu-central-2": {
+            description: "Europe (Zurich)",
+          },
+          "eu-north-1": {
+            description: "Europe (Stockholm)",
+          },
+          "eu-south-1": {
+            description: "Europe (Milan)",
+          },
+          "eu-south-2": {
+            description: "Europe (Spain)",
+          },
+          "eu-west-1": {
+            description: "Europe (Ireland)",
+          },
+          "eu-west-2": {
+            description: "Europe (London)",
+          },
+          "eu-west-3": {
+            description: "Europe (Paris)",
+          },
+          "il-central-1": {
+            description: "Israel (Tel Aviv)",
+          },
+          "me-central-1": {
+            description: "Middle East (UAE)",
+          },
+          "me-south-1": {
+            description: "Middle East (Bahrain)",
+          },
+          "mx-central-1": {
+            description: "Mexico (Central)",
+          },
+          "sa-east-1": {
+            description: "South America (Sao Paulo)",
+          },
+          "us-east-1": {
+            description: "US East (N. Virginia)",
+          },
+          "us-east-2": {
+            description: "US East (Ohio)",
+          },
+          "us-west-1": {
+            description: "US West (N. California)",
+          },
+          "us-west-2": {
+            description: "US West (Oregon)",
+          },
+        },
+      },
+      {
+        id: "aws-cn",
+        outputs: {
+          dnsSuffix: "amazonaws.com.cn",
+          dualStackDnsSuffix: "api.amazonwebservices.com.cn",
+          implicitGlobalRegion: "cn-northwest-1",
+          name: "aws-cn",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^cn\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-cn-global": {
+            description: "aws-cn global region",
+          },
+          "cn-north-1": {
+            description: "China (Beijing)",
+          },
+          "cn-northwest-1": {
+            description: "China (Ningxia)",
+          },
+        },
+      },
+      {
+        id: "aws-eusc",
+        outputs: {
+          dnsSuffix: "amazonaws.eu",
+          dualStackDnsSuffix: "api.amazonwebservices.eu",
+          implicitGlobalRegion: "eusc-de-east-1",
+          name: "aws-eusc",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
+        regions: {
+          "eusc-de-east-1": {
+            description: "EU (Germany)",
+          },
+        },
+      },
+      {
+        id: "aws-iso",
+        outputs: {
+          dnsSuffix: "c2s.ic.gov",
+          dualStackDnsSuffix: "api.aws.ic.gov",
+          implicitGlobalRegion: "us-iso-east-1",
+          name: "aws-iso",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-global": {
+            description: "aws-iso global region",
+          },
+          "us-iso-east-1": {
+            description: "US ISO East",
+          },
+          "us-iso-west-1": {
+            description: "US ISO WEST",
+          },
+        },
+      },
+      {
+        id: "aws-iso-b",
+        outputs: {
+          dnsSuffix: "sc2s.sgov.gov",
+          dualStackDnsSuffix: "api.aws.scloud",
+          implicitGlobalRegion: "us-isob-east-1",
+          name: "aws-iso-b",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-b-global": {
+            description: "aws-iso-b global region",
+          },
+          "us-isob-east-1": {
+            description: "US ISOB East (Ohio)",
+          },
+          "us-isob-west-1": {
+            description: "US ISOB West",
+          },
+        },
+      },
+      {
+        id: "aws-iso-e",
+        outputs: {
+          dnsSuffix: "cloud.adc-e.uk",
+          dualStackDnsSuffix: "api.cloud-aws.adc-e.uk",
+          implicitGlobalRegion: "eu-isoe-west-1",
+          name: "aws-iso-e",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-e-global": {
+            description: "aws-iso-e global region",
+          },
+          "eu-isoe-west-1": {
+            description: "EU ISOE West",
+          },
+        },
+      },
+      {
+        id: "aws-iso-f",
+        outputs: {
+          dnsSuffix: "csp.hci.ic.gov",
+          dualStackDnsSuffix: "api.aws.hci.ic.gov",
+          implicitGlobalRegion: "us-isof-south-1",
+          name: "aws-iso-f",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-f-global": {
+            description: "aws-iso-f global region",
+          },
+          "us-isof-east-1": {
+            description: "US ISOF EAST",
+          },
+          "us-isof-south-1": {
+            description: "US ISOF SOUTH",
+          },
+        },
+      },
+      {
+        id: "aws-us-gov",
+        outputs: {
+          dnsSuffix: "amazonaws.com",
+          dualStackDnsSuffix: "api.aws",
+          implicitGlobalRegion: "us-gov-west-1",
+          name: "aws-us-gov",
+          supportsDualStack: true,
+          supportsFIPS: true,
+        },
+        regionRegex: "^us\\-gov\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-us-gov-global": {
+            description: "aws-us-gov global region",
+          },
+          "us-gov-east-1": {
+            description: "AWS GovCloud (US-East)",
+          },
+          "us-gov-west-1": {
+            description: "AWS GovCloud (US-West)",
+          },
+        },
+      },
+    ];
+    var version = "1.1";
+    var partitionsInfo = {
+      partitions: partitions,
+      version: version,
+    };
+
+    let selectedPartitionsInfo = partitionsInfo;
+    let selectedUserAgentPrefix = "";
+    const partition = (value) => {
+      const { partitions } = selectedPartitionsInfo;
+      for (const partition of partitions) {
+        const { regions, outputs } = partition;
+        for (const [region, regionData] of Object.entries(regions)) {
+          if (region === value) {
+            return {
+              ...outputs,
+              ...regionData,
+            };
+          }
+        }
+      }
+      for (const partition of partitions) {
+        const { regionRegex, outputs } = partition;
+        if (new RegExp(regionRegex).test(value)) {
+          return {
+            ...outputs,
+          };
+        }
+      }
+      const DEFAULT_PARTITION = partitions.find(
+        (partition) => partition.id === "aws",
+      );
+      if (!DEFAULT_PARTITION) {
+        throw new Error(
+          "Provided region was not found in the partition array or regex," +
+            " and default partition with id 'aws' doesn't exist.",
+        );
+      }
+      return {
+        ...DEFAULT_PARTITION.outputs,
+      };
+    };
+    const setPartitionInfo = (partitionsInfo, userAgentPrefix = "") => {
+      selectedPartitionsInfo = partitionsInfo;
+      selectedUserAgentPrefix = userAgentPrefix;
+    };
+    const useDefaultPartitionInfo = () => {
+      setPartitionInfo(partitionsInfo, "");
+    };
+    const getUserAgentPrefix = () => selectedUserAgentPrefix;
+
+    const awsEndpointFunctions = {
+      isVirtualHostableS3Bucket: isVirtualHostableS3Bucket,
+      parseArn: parseArn,
+      partition: partition,
+    };
+    utilEndpoints.customEndpointFunctions.aws = awsEndpointFunctions;
+
+    const resolveDefaultAwsRegionalEndpointsConfig = (input) => {
+      if (typeof input.endpointProvider !== "function") {
+        throw new Error(
+          "@aws-sdk/util-endpoint - endpointProvider and endpoint missing in config for this client.",
+        );
+      }
+      const { endpoint } = input;
+      if (endpoint === undefined) {
+        input.endpoint = async () => {
+          return toEndpointV1(
+            input.endpointProvider(
+              {
+                Region:
+                  typeof input.region === "function"
+                    ? await input.region()
+                    : input.region,
+                UseDualStack:
+                  typeof input.useDualstackEndpoint === "function"
+                    ? await input.useDualstackEndpoint()
+                    : input.useDualstackEndpoint,
+                UseFIPS:
+                  typeof input.useFipsEndpoint === "function"
+                    ? await input.useFipsEndpoint()
+                    : input.useFipsEndpoint,
+                Endpoint: undefined,
+              },
+              { logger: input.logger },
+            ),
+          );
+        };
+      }
+      return input;
+    };
+    const toEndpointV1 = (endpoint) => urlParser.parseUrl(endpoint.url);
+
+    Object.defineProperty(exports, "EndpointError", {
+      enumerable: true,
+      get: function () {
+        return utilEndpoints.EndpointError;
+      },
+    });
+    Object.defineProperty(exports, "isIpAddress", {
+      enumerable: true,
+      get: function () {
+        return utilEndpoints.isIpAddress;
+      },
+    });
+    Object.defineProperty(exports, "resolveEndpoint", {
+      enumerable: true,
+      get: function () {
+        return utilEndpoints.resolveEndpoint;
+      },
+    });
+    exports.awsEndpointFunctions = awsEndpointFunctions;
+    exports.getUserAgentPrefix = getUserAgentPrefix;
+    exports.partition = partition;
+    exports.resolveDefaultAwsRegionalEndpointsConfig =
+      resolveDefaultAwsRegionalEndpointsConfig;
+    exports.setPartitionInfo = setPartitionInfo;
+    exports.toEndpointV1 = toEndpointV1;
+    exports.useDefaultPartitionInfo = useDefaultPartitionInfo;
 
     /***/
   },
@@ -1795,9 +2517,9 @@ exports.modules = {
     const REFRESH_MESSAGE = `To refresh this SSO session run 'aws sso login' with the corresponding profile.`;
 
     const getSsoOidcClient = async (ssoRegion, init = {}) => {
-      const { SSOOIDCClient } = await __webpack_require__
-        .e(/* import() */ 443)
-        .then(__webpack_require__.t.bind(__webpack_require__, 9443, 19));
+      const { SSOOIDCClient } = await Promise.all(
+        /* import() */ [__webpack_require__.e(80), __webpack_require__.e(443)],
+      ).then(__webpack_require__.t.bind(__webpack_require__, 9443, 19));
       const coalesce = (prop) =>
         init.clientConfig?.[prop] ?? init.parentClientConfig?.[prop];
       const ssoOidcClient = new SSOOIDCClient(
@@ -1811,9 +2533,9 @@ exports.modules = {
     };
 
     const getNewSsoOidcToken = async (ssoToken, ssoRegion, init = {}) => {
-      const { CreateTokenCommand } = await __webpack_require__
-        .e(/* import() */ 443)
-        .then(__webpack_require__.t.bind(__webpack_require__, 9443, 19));
+      const { CreateTokenCommand } = await Promise.all(
+        /* import() */ [__webpack_require__.e(80), __webpack_require__.e(443)],
+      ).then(__webpack_require__.t.bind(__webpack_require__, 9443, 19));
       const ssoOidcClient = await getSsoOidcClient(ssoRegion, init);
       return ssoOidcClient.send(
         new CreateTokenCommand({
@@ -1993,7 +2715,7 @@ exports.modules = {
 
   /***/ 5188: /***/ (module) => {
     module.exports = /*#__PURE__*/ JSON.parse(
-      '{"name":"@aws-sdk/client-sso","description":"AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native","version":"3.922.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-sso","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo sso"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.922.0","@aws-sdk/middleware-host-header":"3.922.0","@aws-sdk/middleware-logger":"3.922.0","@aws-sdk/middleware-recursion-detection":"3.922.0","@aws-sdk/middleware-user-agent":"3.922.0","@aws-sdk/region-config-resolver":"3.922.0","@aws-sdk/types":"3.922.0","@aws-sdk/util-endpoints":"3.922.0","@aws-sdk/util-user-agent-browser":"3.922.0","@aws-sdk/util-user-agent-node":"3.922.0","@smithy/config-resolver":"^4.4.1","@smithy/core":"^3.17.2","@smithy/fetch-http-handler":"^5.3.5","@smithy/hash-node":"^4.2.4","@smithy/invalid-dependency":"^4.2.4","@smithy/middleware-content-length":"^4.2.4","@smithy/middleware-endpoint":"^4.3.6","@smithy/middleware-retry":"^4.4.6","@smithy/middleware-serde":"^4.2.4","@smithy/middleware-stack":"^4.2.4","@smithy/node-config-provider":"^4.3.4","@smithy/node-http-handler":"^4.4.4","@smithy/protocol-http":"^5.3.4","@smithy/smithy-client":"^4.9.2","@smithy/types":"^4.8.1","@smithy/url-parser":"^4.2.4","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.5","@smithy/util-defaults-mode-node":"^4.2.7","@smithy/util-endpoints":"^3.2.4","@smithy/util-middleware":"^4.2.4","@smithy/util-retry":"^4.2.4","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-sso","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-sso"}}',
+      '{"name":"@aws-sdk/client-sso","description":"AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native","version":"3.936.0","scripts":{"build":"concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline client-sso","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo sso"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.936.0","@aws-sdk/middleware-host-header":"3.936.0","@aws-sdk/middleware-logger":"3.936.0","@aws-sdk/middleware-recursion-detection":"3.936.0","@aws-sdk/middleware-user-agent":"3.936.0","@aws-sdk/region-config-resolver":"3.936.0","@aws-sdk/types":"3.936.0","@aws-sdk/util-endpoints":"3.936.0","@aws-sdk/util-user-agent-browser":"3.936.0","@aws-sdk/util-user-agent-node":"3.936.0","@smithy/config-resolver":"^4.4.3","@smithy/core":"^3.18.5","@smithy/fetch-http-handler":"^5.3.6","@smithy/hash-node":"^4.2.5","@smithy/invalid-dependency":"^4.2.5","@smithy/middleware-content-length":"^4.2.5","@smithy/middleware-endpoint":"^4.3.12","@smithy/middleware-retry":"^4.4.12","@smithy/middleware-serde":"^4.2.6","@smithy/middleware-stack":"^4.2.5","@smithy/node-config-provider":"^4.3.5","@smithy/node-http-handler":"^4.4.5","@smithy/protocol-http":"^5.3.5","@smithy/smithy-client":"^4.9.8","@smithy/types":"^4.9.0","@smithy/url-parser":"^4.2.5","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.11","@smithy/util-defaults-mode-node":"^4.2.14","@smithy/util-endpoints":"^3.2.5","@smithy/util-middleware":"^4.2.5","@smithy/util-retry":"^4.2.5","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-sso","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-sso"}}',
     );
 
     /***/

@@ -105,10 +105,11 @@ exports.modules = {
               Object.keys(event).find((key) => {
                 return key !== "__type";
               }) ?? "";
+            const body = event[unionMember].body;
             if (unionMember === "initial-response") {
               const dataObject = await this.deserializer.read(
                 responseSchema,
-                event[unionMember].body,
+                body,
               );
               delete dataObject[eventStreamMember];
               return {
@@ -117,10 +118,56 @@ exports.modules = {
               };
             } else if (unionMember in memberSchemas) {
               const eventStreamSchema = memberSchemas[unionMember];
+              if (eventStreamSchema.isStructSchema()) {
+                const out = {};
+                let hasBindings = false;
+                for (const [
+                  name,
+                  member,
+                ] of eventStreamSchema.structIterator()) {
+                  const { eventHeader, eventPayload } =
+                    member.getMergedTraits();
+                  hasBindings =
+                    hasBindings || Boolean(eventHeader || eventPayload);
+                  if (eventPayload) {
+                    if (member.isBlobSchema()) {
+                      out[name] = body;
+                    } else if (member.isStringSchema()) {
+                      out[name] = (
+                        this.serdeContext?.utf8Encoder ?? utilUtf8.toUtf8
+                      )(body);
+                    } else if (member.isStructSchema()) {
+                      out[name] = await this.deserializer.read(member, body);
+                    }
+                  } else if (eventHeader) {
+                    const value = event[unionMember].headers[name]?.value;
+                    if (value != null) {
+                      if (member.isNumericSchema()) {
+                        if (
+                          value &&
+                          typeof value === "object" &&
+                          "bytes" in value
+                        ) {
+                          out[name] = BigInt(value.toString());
+                        } else {
+                          out[name] = Number(value);
+                        }
+                      } else {
+                        out[name] = value;
+                      }
+                    }
+                  }
+                }
+                if (hasBindings) {
+                  return {
+                    [unionMember]: out,
+                  };
+                }
+              }
               return {
                 [unionMember]: await this.deserializer.read(
                   eventStreamSchema,
-                  event[unionMember].body,
+                  body,
                 ),
               };
             } else {

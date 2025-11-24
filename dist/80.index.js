@@ -154,7 +154,7 @@ exports.modules = {
   /***/ 3540: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.recursionDetectionMiddleware = void 0;
-    const lambda_invoke_store_1 = __webpack_require__(7453);
+    const lambda_invoke_store_1 = __webpack_require__(9320);
     const protocol_http_1 = __webpack_require__(2356);
     const TRACE_ID_HEADER_NAME = "X-Amzn-Trace-Id";
     const ENV_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME";
@@ -173,8 +173,9 @@ exports.modules = {
       }
       const functionName = process.env[ENV_LAMBDA_FUNCTION_NAME];
       const traceIdFromEnv = process.env[ENV_TRACE_ID];
-      const traceIdFromInvokeStore =
-        lambda_invoke_store_1.InvokeStore.getXRayTraceId();
+      const invokeStore =
+        await lambda_invoke_store_1.InvokeStore.getInstanceAsync();
+      const traceIdFromInvokeStore = invokeStore?.getXRayTraceId();
       const traceId = traceIdFromInvokeStore ?? traceIdFromEnv;
       const nonEmptyString = (str) => typeof str === "string" && str.length > 0;
       if (nonEmptyString(functionName) && nonEmptyString(traceId)) {
@@ -190,7 +191,10 @@ exports.modules = {
     /***/
   },
 
-  /***/ 3084: /***/ (__unused_webpack_module, exports) => {
+  /***/ 3084: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    var configResolver = __webpack_require__(9316);
+    var stsRegionDefaultResolver = __webpack_require__(9692);
+
     const getAwsRegionExtensionConfiguration = (runtimeConfig) => {
       return {
         setRegion(region) {
@@ -209,65 +213,81 @@ exports.modules = {
       };
     };
 
-    const REGION_ENV_NAME = "AWS_REGION";
-    const REGION_INI_NAME = "region";
-    const NODE_REGION_CONFIG_OPTIONS = {
-      environmentVariableSelector: (env) => env[REGION_ENV_NAME],
-      configFileSelector: (profile) => profile[REGION_INI_NAME],
-      default: () => {
-        throw new Error("Region is missing");
+    Object.defineProperty(exports, "NODE_REGION_CONFIG_FILE_OPTIONS", {
+      enumerable: true,
+      get: function () {
+        return configResolver.NODE_REGION_CONFIG_FILE_OPTIONS;
       },
-    };
-    const NODE_REGION_CONFIG_FILE_OPTIONS = {
-      preferredFile: "credentials",
-    };
-
-    const isFipsRegion = (region) =>
-      typeof region === "string" &&
-      (region.startsWith("fips-") || region.endsWith("-fips"));
-
-    const getRealRegion = (region) =>
-      isFipsRegion(region)
-        ? ["fips-aws-global", "aws-fips"].includes(region)
-          ? "us-east-1"
-          : region.replace(/fips-(dkr-|prod-)?|-fips/, "")
-        : region;
-
-    const resolveRegionConfig = (input) => {
-      const { region, useFipsEndpoint } = input;
-      if (!region) {
-        throw new Error("Region is missing");
-      }
-      return Object.assign(input, {
-        region: async () => {
-          if (typeof region === "string") {
-            return getRealRegion(region);
-          }
-          const providedRegion = await region();
-          return getRealRegion(providedRegion);
-        },
-        useFipsEndpoint: async () => {
-          const providedRegion =
-            typeof region === "string" ? region : await region();
-          if (isFipsRegion(providedRegion)) {
-            return true;
-          }
-          return typeof useFipsEndpoint !== "function"
-            ? Promise.resolve(!!useFipsEndpoint)
-            : useFipsEndpoint();
-        },
-      });
-    };
-
-    exports.NODE_REGION_CONFIG_FILE_OPTIONS = NODE_REGION_CONFIG_FILE_OPTIONS;
-    exports.NODE_REGION_CONFIG_OPTIONS = NODE_REGION_CONFIG_OPTIONS;
-    exports.REGION_ENV_NAME = REGION_ENV_NAME;
-    exports.REGION_INI_NAME = REGION_INI_NAME;
+    });
+    Object.defineProperty(exports, "NODE_REGION_CONFIG_OPTIONS", {
+      enumerable: true,
+      get: function () {
+        return configResolver.NODE_REGION_CONFIG_OPTIONS;
+      },
+    });
+    Object.defineProperty(exports, "REGION_ENV_NAME", {
+      enumerable: true,
+      get: function () {
+        return configResolver.REGION_ENV_NAME;
+      },
+    });
+    Object.defineProperty(exports, "REGION_INI_NAME", {
+      enumerable: true,
+      get: function () {
+        return configResolver.REGION_INI_NAME;
+      },
+    });
+    Object.defineProperty(exports, "resolveRegionConfig", {
+      enumerable: true,
+      get: function () {
+        return configResolver.resolveRegionConfig;
+      },
+    });
     exports.getAwsRegionExtensionConfiguration =
       getAwsRegionExtensionConfiguration;
     exports.resolveAwsRegionExtensionConfiguration =
       resolveAwsRegionExtensionConfiguration;
-    exports.resolveRegionConfig = resolveRegionConfig;
+    Object.keys(stsRegionDefaultResolver).forEach(function (k) {
+      if (k !== "default" && !Object.prototype.hasOwnProperty.call(exports, k))
+        Object.defineProperty(exports, k, {
+          enumerable: true,
+          get: function () {
+            return stsRegionDefaultResolver[k];
+          },
+        });
+    });
+
+    /***/
+  },
+
+  /***/ 9692: /***/ (__unused_webpack_module, exports, __webpack_require__) => {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.warning = void 0;
+    exports.stsRegionDefaultResolver = stsRegionDefaultResolver;
+    const config_resolver_1 = __webpack_require__(9316);
+    const node_config_provider_1 = __webpack_require__(5704);
+    function stsRegionDefaultResolver(loaderConfig = {}) {
+      return (0, node_config_provider_1.loadConfig)(
+        {
+          ...config_resolver_1.NODE_REGION_CONFIG_OPTIONS,
+          async default() {
+            if (!exports.warning.silence) {
+              console.warn(
+                "@aws-sdk - WARN - default STS region of us-east-1 used. See @aws-sdk/credential-providers README and set a region explicitly.",
+              );
+            }
+            return "us-east-1";
+          },
+        },
+        {
+          ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS,
+          ...loaderConfig,
+        },
+      );
+    }
+    exports.warning = {
+      silence: false,
+    };
 
     /***/
   },
@@ -527,6 +547,9 @@ exports.modules = {
           "us-isob-east-1": {
             description: "US ISOB East (Ohio)",
           },
+          "us-isob-west-1": {
+            description: "US ISOB West",
+          },
         },
       },
       {
@@ -721,7 +744,7 @@ exports.modules = {
 
   /***/ 9955: /***/ (module) => {
     module.exports = /*#__PURE__*/ JSON.parse(
-      '{"name":"@aws-sdk/nested-clients","version":"3.911.0","description":"Nested clients for AWS SDK packages.","main":"./dist-cjs/index.js","module":"./dist-es/index.js","types":"./dist-types/index.d.ts","scripts":{"build":"yarn lint && concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline nested-clients","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","lint":"node ../../scripts/validation/submodules-linter.js --pkg nested-clients","test":"yarn g:vitest run","test:watch":"yarn g:vitest watch"},"engines":{"node":">=18.0.0"},"sideEffects":false,"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.911.0","@aws-sdk/middleware-host-header":"3.910.0","@aws-sdk/middleware-logger":"3.910.0","@aws-sdk/middleware-recursion-detection":"3.910.0","@aws-sdk/middleware-user-agent":"3.911.0","@aws-sdk/region-config-resolver":"3.910.0","@aws-sdk/types":"3.910.0","@aws-sdk/util-endpoints":"3.910.0","@aws-sdk/util-user-agent-browser":"3.910.0","@aws-sdk/util-user-agent-node":"3.911.0","@smithy/config-resolver":"^4.3.2","@smithy/core":"^3.16.1","@smithy/fetch-http-handler":"^5.3.3","@smithy/hash-node":"^4.2.2","@smithy/invalid-dependency":"^4.2.2","@smithy/middleware-content-length":"^4.2.2","@smithy/middleware-endpoint":"^4.3.3","@smithy/middleware-retry":"^4.4.3","@smithy/middleware-serde":"^4.2.2","@smithy/middleware-stack":"^4.2.2","@smithy/node-config-provider":"^4.3.2","@smithy/node-http-handler":"^4.4.1","@smithy/protocol-http":"^5.3.2","@smithy/smithy-client":"^4.8.1","@smithy/types":"^4.7.1","@smithy/url-parser":"^4.2.2","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.2","@smithy/util-defaults-mode-node":"^4.2.3","@smithy/util-endpoints":"^3.2.2","@smithy/util-middleware":"^4.2.2","@smithy/util-retry":"^4.2.2","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["./sso-oidc.d.ts","./sso-oidc.js","./sts.d.ts","./sts.js","dist-*/**"],"browser":{"./dist-es/submodules/sso-oidc/runtimeConfig":"./dist-es/submodules/sso-oidc/runtimeConfig.browser","./dist-es/submodules/sts/runtimeConfig":"./dist-es/submodules/sts/runtimeConfig.browser"},"react-native":{},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/packages/nested-clients","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"packages/nested-clients"},"exports":{"./sso-oidc":{"types":"./dist-types/submodules/sso-oidc/index.d.ts","module":"./dist-es/submodules/sso-oidc/index.js","node":"./dist-cjs/submodules/sso-oidc/index.js","import":"./dist-es/submodules/sso-oidc/index.js","require":"./dist-cjs/submodules/sso-oidc/index.js"},"./sts":{"types":"./dist-types/submodules/sts/index.d.ts","module":"./dist-es/submodules/sts/index.js","node":"./dist-cjs/submodules/sts/index.js","import":"./dist-es/submodules/sts/index.js","require":"./dist-cjs/submodules/sts/index.js"}}}',
+      '{"name":"@aws-sdk/nested-clients","version":"3.936.0","description":"Nested clients for AWS SDK packages.","main":"./dist-cjs/index.js","module":"./dist-es/index.js","types":"./dist-types/index.d.ts","scripts":{"build":"yarn lint && concurrently \'yarn:build:cjs\' \'yarn:build:es\' \'yarn:build:types\'","build:cjs":"node ../../scripts/compilation/inline nested-clients","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","lint":"node ../../scripts/validation/submodules-linter.js --pkg nested-clients","test":"yarn g:vitest run","test:watch":"yarn g:vitest watch"},"engines":{"node":">=18.0.0"},"sideEffects":false,"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.936.0","@aws-sdk/middleware-host-header":"3.936.0","@aws-sdk/middleware-logger":"3.936.0","@aws-sdk/middleware-recursion-detection":"3.936.0","@aws-sdk/middleware-user-agent":"3.936.0","@aws-sdk/region-config-resolver":"3.936.0","@aws-sdk/types":"3.936.0","@aws-sdk/util-endpoints":"3.936.0","@aws-sdk/util-user-agent-browser":"3.936.0","@aws-sdk/util-user-agent-node":"3.936.0","@smithy/config-resolver":"^4.4.3","@smithy/core":"^3.18.5","@smithy/fetch-http-handler":"^5.3.6","@smithy/hash-node":"^4.2.5","@smithy/invalid-dependency":"^4.2.5","@smithy/middleware-content-length":"^4.2.5","@smithy/middleware-endpoint":"^4.3.12","@smithy/middleware-retry":"^4.4.12","@smithy/middleware-serde":"^4.2.6","@smithy/middleware-stack":"^4.2.5","@smithy/node-config-provider":"^4.3.5","@smithy/node-http-handler":"^4.4.5","@smithy/protocol-http":"^5.3.5","@smithy/smithy-client":"^4.9.8","@smithy/types":"^4.9.0","@smithy/url-parser":"^4.2.5","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.11","@smithy/util-defaults-mode-node":"^4.2.14","@smithy/util-endpoints":"^3.2.5","@smithy/util-middleware":"^4.2.5","@smithy/util-retry":"^4.2.5","@smithy/util-utf8":"^4.2.0","tslib":"^2.6.2"},"devDependencies":{"concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["./signin.d.ts","./signin.js","./sso-oidc.d.ts","./sso-oidc.js","./sts.d.ts","./sts.js","dist-*/**"],"browser":{"./dist-es/submodules/signin/runtimeConfig":"./dist-es/submodules/signin/runtimeConfig.browser","./dist-es/submodules/sso-oidc/runtimeConfig":"./dist-es/submodules/sso-oidc/runtimeConfig.browser","./dist-es/submodules/sts/runtimeConfig":"./dist-es/submodules/sts/runtimeConfig.browser"},"react-native":{},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/packages/nested-clients","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"packages/nested-clients"},"exports":{"./package.json":"./package.json","./sso-oidc":{"types":"./dist-types/submodules/sso-oidc/index.d.ts","module":"./dist-es/submodules/sso-oidc/index.js","node":"./dist-cjs/submodules/sso-oidc/index.js","import":"./dist-es/submodules/sso-oidc/index.js","require":"./dist-cjs/submodules/sso-oidc/index.js"},"./sts":{"types":"./dist-types/submodules/sts/index.d.ts","module":"./dist-es/submodules/sts/index.js","node":"./dist-cjs/submodules/sts/index.js","import":"./dist-es/submodules/sts/index.js","require":"./dist-cjs/submodules/sts/index.js"},"./signin":{"types":"./dist-types/submodules/signin/index.d.ts","module":"./dist-es/submodules/signin/index.js","node":"./dist-cjs/submodules/signin/index.js","import":"./dist-es/submodules/signin/index.js","require":"./dist-cjs/submodules/signin/index.js"}}}',
     );
 
     /***/
