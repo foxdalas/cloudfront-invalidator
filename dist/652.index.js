@@ -5358,7 +5358,9 @@ More information can be found at: https://a.co/74kJMmI`);
       }
     }
 
-    let SigninServiceException$1 = class SigninServiceException extends smithyClient.ServiceException {
+    let SigninServiceException$1 = class SigninServiceException
+      extends smithyClient.ServiceException
+    {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, SigninServiceException.prototype);

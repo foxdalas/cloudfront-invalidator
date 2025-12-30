@@ -181,7 +181,9 @@ exports.modules = {
       );
     };
 
-    class InstanceMetadataV1FallbackError extends propertyProvider.CredentialsProviderError {
+    class InstanceMetadataV1FallbackError
+      extends propertyProvider.CredentialsProviderError
+    {
       tryNextLink;
       name = "InstanceMetadataV1FallbackError";
       constructor(message, tryNextLink = true) {

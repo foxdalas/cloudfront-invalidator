@@ -414,7 +414,9 @@ exports.modules = {
       }
     }
 
-    let SSOOIDCServiceException$1 = class SSOOIDCServiceException extends smithyClient.ServiceException {
+    let SSOOIDCServiceException$1 = class SSOOIDCServiceException
+      extends smithyClient.ServiceException
+    {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, SSOOIDCServiceException.prototype);

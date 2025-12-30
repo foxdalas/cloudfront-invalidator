@@ -423,7 +423,9 @@ exports.modules = {
       }
     }
 
-    let SSOServiceException$1 = class SSOServiceException extends smithyClient.ServiceException {
+    let SSOServiceException$1 = class SSOServiceException
+      extends smithyClient.ServiceException
+    {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, SSOServiceException.prototype);

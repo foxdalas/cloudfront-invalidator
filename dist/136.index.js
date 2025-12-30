@@ -574,7 +574,9 @@ exports.modules = {
     var client = __webpack_require__(5152);
     var regionConfigResolver = __webpack_require__(3084);
 
-    let STSServiceException$1 = class STSServiceException extends smithyClient.ServiceException {
+    let STSServiceException$1 = class STSServiceException
+      extends smithyClient.ServiceException
+    {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, STSServiceException.prototype);
