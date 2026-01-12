@@ -15,7 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "@actions/core": "^2.0.1",
-    "@actions/github": "^6.0.0",
+    "@actions/github": "^7.0.0",
     "@aws-sdk/client-cloudfront": "^3.635.0",
     "@aws-sdk/client-resource-groups-tagging-api": "^3.635.0",
     "@vercel/ncc": "^0.38.1",
